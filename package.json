@@ -1,29 +1,29 @@
 {
-  "name": "themer",
-  "version": "1.0.0",
-  "description": "A library for setting up structured themes in frontend web applications.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/alex-greff/themer.git"
-  },
-  "keywords": [
-    "theme",
-    "theming",
-    "CSS",
-    "SCSS",
-    "React",
-    "Vue",
-    "web",
-    "frontend"
-  ],
-  "author": "Alexander Greff",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/alex-greff/themer/issues"
-  },
-  "homepage": "https://github.com/alex-greff/themer#readme"
+    "name": "themer",
+    "version": "1.0.0",
+    "description": "A library for setting up structured themes in frontend web applications.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/alex-greff/themer.git"
+    },
+    "keywords": [
+        "theme",
+        "theming",
+        "CSS",
+        "SCSS",
+        "React",
+        "Vue",
+        "web",
+        "frontend"
+    ],
+    "author": "Alexander Greff",
+    "license": "GNU",
+    "bugs": {
+        "url": "https://github.com/alex-greff/themer/issues"
+    },
+    "homepage": "https://github.com/alex-greff/themer#readme"
 }
