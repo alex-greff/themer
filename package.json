@@ -21,7 +21,7 @@
         "frontend"
     ],
     "author": "Alexander Greff",
-    "license": "GNU",
+    "license": "GPL-3.0",
     "bugs": {
         "url": "https://github.com/alex-greff/themer/issues"
     },
