@@ -1,2 +1,2 @@
 # themer
-A library for setting up structured themes in frontend web applications. 
+A base library for setting up structured CSS/SCSS themes in frontend web applications. 
