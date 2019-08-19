@@ -1,5 +1,17 @@
-/** @private is the given object an integer? */
-const isInteger = (obj) => String(Math.floor(Number(obj))) === obj;
+/** Is the given object an integer? */
+export const isInteger = (obj) => String(Math.floor(Number(obj))) === obj;
+
+/** Is the given object a Function? */
+export const isFunction = (obj) => typeof obj === 'function';
+
+/** Is the given object an Object? */
+export const isObject = (obj) => obj !== null && typeof obj === 'object';
+
+/** Is the given object a string? */
+export const isString = (obj) => Object.prototype.toString.call(obj) === '[object String]';
+
+/** Is the given object an array? */
+export const isArray = (obj) => Array.isArray(obj);
 
 /**
  * Deeply get a value from an object via its path.
@@ -73,4 +85,14 @@ export const setIn = (obj, path, value) => {
     }
 
     return res;
+};
+
+export default {
+    isInteger,
+    isFunction,
+    isObject,
+    isString,
+    isArray,
+    setIn,
+    getIn,
 };

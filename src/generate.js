@@ -1,57 +1,16 @@
+import update from "immutability-helper";
 import defaultTypes from "./types";
+import Utilities from "./utilities";
+import Errors from "./errors";
+import CONSTANTS from "./constants";
+import CHECKS from "./checks";
 
-const CONTROLS = {
-    REQUIRED: "$required",
-    TYPE: "$type",
-    DEFAULT: "$default",
-    VALIDATE: "$validate",
-    INHERITES: "$inherits",
-    MIXIN: "$mixin"
-};
-
-const ENDPOINT_CONTROLS = [
-    CONTROLS.REQUIRED,
-    CONTROLS.TYPE,
-    CONTROLS.DEFAULT,
-    CONTROLS.VALIDATE
-];
-
-const INJECTION_CONTROLS = [
-    CONTROLS.INHERITES,
-    CONTROLS.MIXIN
-];
-
-const DEFAULT_ENDPOINT = {
-    [CONTROLS.REQUIRED]: false,
-    [CONTROLS.TYPE]: "all",
-    [CONTROLS.DEFAULT]: null,
-    [CONTROLS.VALIDATE]: null
-};
-
-function throwErorr(message) {
-    throw message;
-}
-
-function throwSyntaxError(message) {
-    throwErorr(`Invalid syntax: ${message}`);
-}
-
-function throwInvalidThemeError(message) {
-    throwErorr(`Invalid theme: ${message}`);
-}
-
-function throwTypeError(message) {
-    throwErorr(`Endpoint type: ${message}`);
-}
-
-function throwValidationError(message) {
-    throwErorr(`Validation error: ${message}`);
-}
 
 /**
+ * Returns a string with the new section added onto the given path.
  * 
- * @param {String} currentPath 
- * @param {String} addition 
+ * @param {String} currentPath The current path.
+ * @param {String} addition The section addition.
  */
 function addToPath(currentPath, addition) {
     if (!currentPath) {
@@ -59,42 +18,6 @@ function addToPath(currentPath, addition) {
     }
 
     return `${currentPath}__${addition}`;
-}
-
-/**
- * Returns if the given control is an endpoint-triggering control.
- * 
- * @param {String} control The control being checked.
- */
-function isEndpointControl(control) {
-    return ENDPOINT_CONTROLS.includes(control);
-}
-
-/**
- * Returns if all the given controls are endpoint-triggering controls.
- * 
- * @param {Array} controls The array of control names.
- */
-function allEndpointControls(controls) {
-    return controls.every((control) => isEndpointControl(control));
-}
-
-/**
- * Returns if an endpoint-triggering control exists in the given controls.
- * 
- * @param {Array} controls The array of control names.
- */
-function hasEndpointControls(controls) {
-    return controls.some((control) => isEndpointControl(control));
-}
-
-/**
- * Returns if the given control is an injection-based control.
- * 
- * @param {String} control The control being checked.
- */
-function isInjectionControl(control) {
-    return INJECTION_CONTROLS.includes(control);
 }
 
 /**
@@ -108,52 +31,104 @@ function evaluateType(typeName, value, registeredTypes = defaultTypes) {
     const typeObj = registeredTypes[typeName];
 
     if (!typeObj)
-        throwTypeError(`Type '${typeName}' is not registered.`);
+        Errors.throwTypeError(`Type '${typeName}' is not registered.`);
 
     // Run the validator
     const validated = typeObj.validator(value);
 
     if (!validated) {
-        throwValidationError(`Theme value '${value}' failed for type '${typeName}'`);
+        Errors.throwValidationError(`Theme value '${value}' failed for type '${typeName}'`);
     }
 }
 
+/**
+ * Returns if the given control is a valid control format.
+ * 
+ * @param {String} control The potential control.
+ */
+function isValidControl(control) {
+    const controlRegex = /^\$\w+$/;
+    return controlRegex.test(control);
+}
+
+/**
+ * Returns if the given non-control item is valid.
+ * 
+ * @param {String} item The non-control item to check.
+ */
+function isValidNonControl(item) {
+    const itemRegex = /[\w\d]+/;
+    return itemRegex.test(item);
+}
+
+/**
+ * Validates all items. If they are cont
+ * 
+ * @param {Array} items The potential controls.
+ */
+function validateItems(items) {
+    return items.every((item) => {
+        if (isValidControl(item)) {
+            // Control must exist
+            if (!CHECKS.controlExists(item)) {
+                Errors.throwSyntaxError(`Control '${item}' does not exist`);
+            }
+        } else {
+            if (!isValidNonControl(item)) {
+                Errors.throwSyntaxError(`Item '${item}' is not valid.`);
+            }
+        }
+    });
+}
+
+/**
+ * Recursively evaluates the given section with the theme.
+ * 
+ * @param {String} path The current path.
+ * @param {Object} section The current section.
+ * @param {Object} theme The current theme section.
+ * @param {Object} fullSchema The complete schema.
+ * @param {Object} registeredTypes All the registered types.
+ */
 function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
     // Check for invalid syntax
-    if (Array.isArray(section))
-        throwSyntaxError("Arrays are not allowed in schemas");
+    if (Utilities.isArray(section))
+        Errors.throwSyntaxError("Arrays are not allowed in schemas");
 
-    if (Array.isArray(theme))
-        throwSyntaxError("Arrays are not allowed in themes");
+    if (Utilities.isArray(theme))
+        Errors.throwSyntaxError("Arrays are not allowed in themes");
 
-    const allControls = Object.keys(section);
+    const allItems = Object.keys(section);
+
+    // Validate the items
+    validateItems(allItems);
 
     // Base case: check for endpoint controls
-    if (hasEndpointControls(allControls)) {
-        if (!allEndpointControls(allControls)) {
-            throwSyntaxError("Endpoint has non-endpoint controls");
+    if (CHECKS.hasEndpointControls(allItems)) {
+        if (!CHECKS.allEndpointControls(allItems)) {
+            Errors.throwSyntaxError("Endpoint has non-endpoint controls");
         }
 
         // Theme should be a string, function or undefined/null now
-        if (theme && (typeof theme !== "string" && typeof theme !== "function")) {
-            throwInvalidThemeError(`Theme endpoint should be a string or function at path '${path}'`);
+        if (theme && !Utilities.isString(theme) && !Utilities.isFunction(theme)) {
+            Errors.throwInvalidThemeError(`Theme endpoint should be a string or function at path '${path}'`);
         }
 
         // Get the theme value
-        const themeVal = (typeof theme === 'function') ? theme() : theme;
+        const themeVal = Utilities.isFunction(theme) ? theme() : theme;
 
         // Get the endpoint object
         const endpoint = {
-            ...DEFAULT_ENDPOINT,
+            ...CONSTANTS.DEFAULT_ENDPOINT,
             ...section,
         }
 
-        const required = endpoint[CONTROLS.REQUIRED];
-        const type = endpoint[CONTROLS.TYPE];
-        const validator = endpoint[CONTROLS.VALIDATE];
-        const defaultVal = endpoint[CONTROLS.DEFAULT];
+        const required = endpoint[CONSTANTS.CONTROLS.REQUIRED];
+        const type = endpoint[CONSTANTS.CONTROLS.TYPE];
+        const validator = endpoint[CONSTANTS.CONTROLS.VALIDATE];
+        const defaultVal = endpoint[CONSTANTS.CONTROLS.DEFAULT];
 
-        // $validator provided case
+        // Case: $validator provided
         if (validator) {
             const validatorName = "__validator";
             const validatorRegistration = { 
@@ -169,11 +144,11 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
             return { [path]: themeVal };
         }
 
-        // $required=true case
+        // Case: $required=true
         if (required) {
             // No theme value provided
             if (!themeVal) {
-                throwValidationError(`No theme value provided when ${CONTROLS.REQUIRED}=true at path '${path}'`);
+                Errors.throwValidationError(`No theme value provided when ${CONSTANTS.CONTROLS.REQUIRED}=true at path '${path}'`);
             }
 
             // Evaluate the type
@@ -182,7 +157,7 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
             return { [path]: themeVal };
         }
 
-        // $default provided and no theme provided case
+        // Case: $default provided and no theme provided
         if (defaultVal && !themeVal) {
             // Evaluate default value
             evaluateType(type, defaultVal, registeredTypes);
@@ -190,12 +165,12 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
             return { [path]: defaultVal };
         }
 
-        // $default not provided and no theme provided case
+        // Case: $default not provided and no theme provided
         if (!defaultVal && !themeVal) {
-            throwValidationError(`No theme and default value provided at path '${path}'`);
+            Errors.throwValidationError(`No theme and default value provided at path '${path}'`);
         }
 
-        // Everything passes and theme value exists case
+        // Case: Everything passes and theme value exists
         
         // Evaluate theme value
         evaluateType(type, themeVal, registeredTypes);
@@ -204,19 +179,69 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
     }
 
     // Inject any mixins (making sure to remove the $mixin control)
-    // TODO: complete
+    const mixins = section[CONSTANTS.CONTROLS.MIXIN];
+    if (mixins) {
+        function injectMixin(mixinName) {
+            if (Utilities.isString(mixinName)) {
+                // TODO: inject mixin
+            } else {
+                Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinName} at path '${path}'. Must be a string.`);
+            }
+        }
+
+        if (Utilities.isArray(mixins)) {
+            // Inject each mixin
+            mixins.forEach((mixinName) => injectMixin(mixinName));
+        } else if (Utilities.isFunction(mixins)) {
+            // Inject the return value of the function after is it run
+            injectMixin(mixins()); 
+        } else {
+            // Inject the single mixin
+            injectMixin(mixins);
+        }
+
+        // Remove the $mixin control
+        section = update(section, {
+            $unset: [CONSTANTS.CONTROLS.MIXIN]
+        });
+    }
 
     // Inject any inheritances (making sure to remove the $inherits control)
-    // TODO: complete
-    
+    const inheritors = section[CONSTANTS.CONTROLS.INHERITES];
+    if (inheritors) {
+        function injectinheritance(inheritorName) {
+            if (Utilities.isString(inheritorName)) {
+                // TODO: inject inheritance
+            } else {
+                Errors.throwSyntaxError(`Invalid inheritance type ${typeof inheritorName} at path '${path}'. Must be a string.`);
+            }
+        }
 
-    if (typeof section === "object") {
+        if (Utilities.isArray(inheritors)) {
+            // Inject each mixin
+            inheritors.forEach((inheritorName) => injectinheritance(inheritorName));
+        } else if (Utilities.isFunction(inheritors)) {
+            // Inject the return value of the function after is it run
+            injectMixin(inheritors()); 
+        } else {
+            // Inject the single mixin
+            injectMixin(inheritors);
+        }
+
+        // Remove the $mixin control
+        section = update(section, {
+            $unset: [CONSTANTS.CONTROLS.INHERITES]
+        });
+    }
+    
+    // If the endpoint has not been hit yet
+    if (Utilities.isObject(section)) {
         const evaluations = Object.entries(section).reduce((accumulator, [subSectionName, subSection]) => {
             const themeSubSection = theme[subSectionName];
             const newPath = addToPath(path, subSectionName);
 
             if (!themeSubSection) {
-                throwInvalidThemeError(`Theme subsection is missing at path partial '${newPath}'`);
+                Errors.throwInvalidThemeError(`Theme subsection is missing at path partial '${newPath}'`);
             }
 
             // Recursively evaluate the sub sections
