@@ -124,6 +124,15 @@ export function splitEntries(splitKey, obj) {
     ];
 }
 
+/**
+ * Returns if the given object is empty.
+ * 
+ * @param {Object} obj The object.
+ */
+export function isEmptyObject(obj) {
+    return Object.entries(obj).length === 0 && obj.constructor === Object;
+}
+
 export default {
     isInteger,
     isFunction,
@@ -133,4 +142,5 @@ export default {
     setIn,
     getIn,
     splitEntries,
+    isEmptyObject,
 };
