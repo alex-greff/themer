@@ -45,10 +45,32 @@ export function isInjectionControl(control) {
     return CONSTANTS.INJECTION_CONTROLS.includes(control);
 }
 
+/**
+ * Returns if the given control is a valid control format.
+ * 
+ * @param {String} control The potential control.
+ */
+export function isValidControl(control) {
+    const controlRegex = /^\$\w+$/;
+    return controlRegex.test(control);
+}
+
+/**
+ * Returns if the given non-control item is valid.
+ * 
+ * @param {String} item The non-control item to check.
+ */
+export function isValidNonControl(item) {
+    const itemRegex = /[\w\d]+/;
+    return itemRegex.test(item);
+}
+
 export default {
     controlExists,
     isEndpointControl,
     allEndpointControls,
     hasEndpointControls,
     isInjectionControl,
+    isValidControl,
+    isValidNonControl,
 };

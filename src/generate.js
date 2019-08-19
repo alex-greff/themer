@@ -42,39 +42,19 @@ function evaluateType(typeName, value, registeredTypes = defaultTypes) {
 }
 
 /**
- * Returns if the given control is a valid control format.
- * 
- * @param {String} control The potential control.
- */
-function isValidControl(control) {
-    const controlRegex = /^\$\w+$/;
-    return controlRegex.test(control);
-}
-
-/**
- * Returns if the given non-control item is valid.
- * 
- * @param {String} item The non-control item to check.
- */
-function isValidNonControl(item) {
-    const itemRegex = /[\w\d]+/;
-    return itemRegex.test(item);
-}
-
-/**
  * Validates all items. If they are cont
  * 
  * @param {Array} items The potential controls.
  */
 function validateItems(items) {
     return items.every((item) => {
-        if (isValidControl(item)) {
+        if (CHECKS.isValidControl(item)) {
             // Control must exist
             if (!CHECKS.controlExists(item)) {
                 Errors.throwSyntaxError(`Control '${item}' does not exist`);
             }
         } else {
-            if (!isValidNonControl(item)) {
+            if (!CHECKS.isValidNonControl(item)) {
                 Errors.throwSyntaxError(`Item '${item}' is not valid.`);
             }
         }
