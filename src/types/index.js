@@ -1,5 +1,5 @@
-import allType from "./all";
+import anyType from "./any";
 
 export default {
-    [allType.name]: allType
+    [anyType.name]: anyType
 };

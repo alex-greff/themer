@@ -4,7 +4,7 @@ const CONTROLS = {
     REQUIRED: "$required",
     TYPE: "$type",
     DEFAULT: "$default",
-    VALIDATOR: "$validator",
+    VALIDATE: "$validate",
     INHERITES: "$inherits",
     MIXIN: "$mixin"
 };
@@ -29,7 +29,7 @@ const DEFAULT_ENDPOINT = {
 };
 
 function throwErorr(message) {
-    throw new Erorr(message);
+    throw message;
 }
 
 function throwSyntaxError(message) {
@@ -118,7 +118,7 @@ function evaluateType(typeName, value, registeredTypes = defaultTypes) {
     }
 }
 
-function evaluateSection(path, section, theme, mixins, fullSchema, registeredTypes) {
+function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
     // Check for invalid syntax
     if (Array.isArray(section))
         throwSyntaxError("Arrays are not allowed in schemas");
@@ -135,8 +135,8 @@ function evaluateSection(path, section, theme, mixins, fullSchema, registeredTyp
         }
 
         // Theme should be a string, function or undefined/null now
-        if (theme && (typeof theme !== "string" || typeof theme !== "function")) {
-            throwInvalidThemeError(`Theme endpoint should be a string or function at path ${path}`);
+        if (theme && (typeof theme !== "string" && typeof theme !== "function")) {
+            throwInvalidThemeError(`Theme endpoint should be a string or function at path '${path}'`);
         }
 
         // Get the theme value
@@ -212,15 +212,15 @@ function evaluateSection(path, section, theme, mixins, fullSchema, registeredTyp
 
     if (typeof section === "object") {
         const evaluations = Object.entries(section).reduce((accumulator, [subSectionName, subSection]) => {
-            const themeSubSection = theme[subSection];
+            const themeSubSection = theme[subSectionName];
             const newPath = addToPath(path, subSectionName);
 
             if (!themeSubSection) {
-                throwInvalidThemeError("Theme subsection is missing at path partial", newPath);
+                throwInvalidThemeError(`Theme subsection is missing at path partial '${newPath}'`);
             }
 
             // Recursively evaluate the sub sections
-            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, mixins, fullSchema);
+            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, fullSchema, registeredTypes);
 
             return { ...accumulator, ...subSectionEvaluations };
         }, {});
@@ -239,7 +239,7 @@ function evaluateSection(path, section, theme, mixins, fullSchema, registeredTyp
  */
 export function generate(theme, schema, customTypes) {
     const registeredTypes = { ...customTypes, ...defaultTypes };
-    return evaluateSection("", schema, theme, schema, registeredTypes);
+    return evaluateSection("", schema.schema, theme, schema, registeredTypes);
 }
 
 export default {
