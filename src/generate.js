@@ -17,7 +17,17 @@ function addToPath(currentPath, addition) {
         return addition;
     }
 
-    return `${currentPath}__${addition}`;
+    return `${currentPath}${CONSTANTS.SEPARATOR}${addition}`;
+}
+
+/**
+ * Converts the given dot path to the standard path string.
+ * 
+ * @param {String} dotPath The dot path.
+ */
+function convertDotPath(dotPath) {
+    const split = dotPath.split(".");
+    return split.join(CONSTANTS.SEPARATOR);
 }
 
 /**
@@ -163,7 +173,22 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
     if (mixins) {
         function injectMixin(mixinName) {
             if (Utilities.isString(mixinName)) {
-                // TODO: inject mixin
+                const mixinObj = Utilities.getIn(fullSchema.mixins, mixinName);
+
+                if (!mixinObj) {
+                    Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
+                }
+
+                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXIN, section);
+
+                // Reconstruct the section with the $mixin control removed
+                const updatedSection = {
+                    ...sectionSplit[0],
+                    ...mixinObj,
+                    ...sectionSplit[1]
+                };
+                section = updatedSection;
+
             } else {
                 Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinName} at path '${path}'. Must be a string.`);
             }
@@ -179,27 +204,39 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
             // Inject the single mixin
             injectMixin(mixins);
         }
-
-        // Remove the $mixin control
-        section = update(section, {
-            $unset: [CONSTANTS.CONTROLS.MIXIN]
-        });
     }
 
     // Inject any inheritances (making sure to remove the $inherits control)
     const inheritors = section[CONSTANTS.CONTROLS.INHERITES];
     if (inheritors) {
-        function injectinheritance(inheritorName) {
-            if (Utilities.isString(inheritorName)) {
+        function injectinheritance(inheritorDotPath) {
+            if (Utilities.isString(inheritorDotPath)) {
+                const inheritorPath = convertDotPath(inheritorDotPath);
+
                 // TODO: inject inheritance
+                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.INHERITES, section);
+
+                // const isInheritorBefore = sectionSplit[0].some(([subSectionName]) => subSectionName === inheritorName);
+                // const isInheritorAfter = sectionSplit[1].some(([subSectionName]) => subSectionName === inheritorName);
+                // const isInheritorFound = isInheritorBefore || isInheritorAfter;
+
+                // if (!isInheritorFound) {
+                //     Errors.throwSchemaError(`Inheritor '${inheritorName}' not found.`);
+                // }
+
+                // // Check if the inherited section is before (aka it's already been computed)
+                // if (!isInheritanceBefore) {
+                //     Errors.throwSchemaError(`Inheritor '${inheritorName}' must be before the section where it is interited from`)
+                // }
+
             } else {
-                Errors.throwSyntaxError(`Invalid inheritance type ${typeof inheritorName} at path '${path}'. Must be a string.`);
+                Errors.throwSyntaxError(`Invalid inheritance type ${typeof inheritorDotPath} at path '${path}'. Must be a string.`);
             }
         }
 
         if (Utilities.isArray(inheritors)) {
             // Inject each mixin
-            inheritors.forEach((inheritorName) => injectinheritance(inheritorName));
+            inheritors.forEach((inheritorDotPath) => injectinheritance(inheritorDotPath));
         } else if (Utilities.isFunction(inheritors)) {
             // Inject the return value of the function after is it run
             injectMixin(inheritors()); 
@@ -208,10 +245,10 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes) {
             injectMixin(inheritors);
         }
 
-        // Remove the $mixin control
-        section = update(section, {
-            $unset: [CONSTANTS.CONTROLS.INHERITES]
-        });
+        // Remove the $inherits control
+        // section = update(section, {
+        //     $unset: [CONSTANTS.CONTROLS.INHERITES]
+        // });
     }
     
     // If the endpoint has not been hit yet

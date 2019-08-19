@@ -1,3 +1,5 @@
+export const SEPARATOR = "__";
+
 export const CONTROLS = {
     REQUIRED: "$required",
     TYPE: "$type",
@@ -27,6 +29,7 @@ export const DEFAULT_ENDPOINT = {
 };
 
 export default {
+    SEPARATOR,
     CONTROLS,
     ENDPOINT_CONTROLS,
     INJECTION_CONTROLS,

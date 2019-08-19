@@ -1,3 +1,6 @@
+import clone from "lodash.clone";
+import toPath from "lodash.topath";
+
 /** Is the given object an integer? */
 export const isInteger = (obj) => String(Math.floor(Number(obj))) === obj;
 
@@ -87,6 +90,40 @@ export const setIn = (obj, path, value) => {
     return res;
 };
 
+
+/**
+ * Returns a tuple (2-item array) with the first index containing an object with the content before 
+ * the split key and the second index containing and object with the entries after it.
+ * 
+ * @param {String} splitKey The key to split by.
+ * @param {Object} obj The object.
+ */
+export function splitEntries(splitKey, obj) {
+    const splitIdx = Object.keys(obj).indexOf(splitKey);
+
+    if (splitIdx < 0) {
+        return null;
+    }
+
+    const entries = Object.entries(obj);
+
+    const beforeEntries = entries.filter((_, index) => index < splitIdx);
+    const afterEntries = entries.filter((_, index) => index > splitIdx);
+
+    const beforeObj = beforeEntries.reduce((acc, [key, val]) => (
+        { ...acc, [key]: val }
+    ), {});
+
+    const afterObj = afterEntries.reduce((acc, [key, val]) => (
+        { ...acc, [key]: val }
+    ), {});
+
+    return [
+        beforeObj,
+        afterObj
+    ];
+}
+
 export default {
     isInteger,
     isFunction,
@@ -95,4 +132,5 @@ export default {
     isArray,
     setIn,
     getIn,
+    splitEntries,
 };

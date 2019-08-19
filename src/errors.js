@@ -18,10 +18,15 @@ export function throwValidationError(message) {
     throwErorr(`Validation error: ${message}`);
 }
 
+export function throwSchemaError(message) {
+    throwErorr(`Schema error: ${message}`);
+}
+
 export default {
     throwErorr,
     throwSyntaxError,
     throwInvalidThemeError,
     throwTypeError,
-    throwValidationError
+    throwValidationError,
+    throwSchemaError,
 };
