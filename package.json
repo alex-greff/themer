@@ -25,5 +25,8 @@
     "bugs": {
         "url": "https://github.com/alex-greff/themer/issues"
     },
-    "homepage": "https://github.com/alex-greff/themer#readme"
+    "homepage": "https://github.com/alex-greff/themer#readme",
+    "dependencies": {
+        "immutability-helper": "^3.0.1"
+    }
 }
