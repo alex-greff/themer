@@ -1,3 +1,4 @@
+import defaultTypes from "./types";
 import CONSTANTS from "./constants";
 
 /**
@@ -65,6 +66,15 @@ export function isValidNonControl(item) {
     return itemRegex.test(item);
 }
 
+/**
+ * Checks if the given name is a default type.
+ * 
+ * @param {String} name The name of type.
+ */
+export function isDefaultType(name) {
+    return !!defaultTypes[name];
+}
+
 export default {
     controlExists,
     isEndpointControl,
@@ -73,4 +83,5 @@ export default {
     isInjectionControl,
     isValidControl,
     isValidNonControl,
+    isDefaultType,
 };

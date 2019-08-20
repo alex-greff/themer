@@ -133,6 +133,74 @@ export function isEmptyObject(obj) {
     return Object.entries(obj).length === 0 && obj.constructor === Object;
 }
 
+/**
+ * Returns true if the color is of RGB form.
+ * E.g. rgb(255, 109, 70)
+ * 
+ * @param {String} color The color.
+ */
+export function isRGB(color) {
+    const rRGB = /^rgb\(([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5]),\s?([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5]),\s?([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\)$/;
+    return rRGB.test(color);
+};
+
+/**
+ * Returns true if the color is of hex form.
+ * E.g. #001150
+ * 
+ * @param {String} color The color.
+ */
+export function isHex(color) {
+    const rHex = /^#([0-9]|[A-F]){6}/;
+    return rHex.test(color);
+};
+
+/**
+ * Returns true if the color is of HSL form.
+ * E.g. hsl(200, 100%, 20%)
+ * 
+ * @param {String} color The color.
+ */
+export function isHSL(color) {
+    const rHSL = /^hsl\(([0-9]|[1-8][0-9]|9[0-9]|[12][0-9]{2}|3[0-5][0-9]|360),\s?(100|[1-9]?[0-9])%,\s?(100|[1-9]?[0-9])%\)$/;
+    return rHSL.test(color);
+};
+
+// Adapted from: https://stackoverflow.com/questions/48484767/javascript-check-if-string-is-valid-css-color
+/**
+ * Checks if the given color name is supported in the browser.
+ * 
+ * @param {String} color The color.
+ */
+export function isColorName(color) {
+    const style = new Option().style;
+    style.color = color;
+    return style.color === color;
+}
+
+/**
+ * Returns if the given string is a valid CSS length.
+ * Ex: '5rem', '20%', '15px, etc
+ * 
+ * @param {String} length The CSS length.
+ */
+export function isCSSLength(length) {
+    const CSSLengthRegex = /^0$|^(\d*?.?\d+)(rem|em|px|cm|mm|in|pt|pc|ch|vw|vh|vmin|vmax|%)$/g;
+    return CSSLengthRegex.test(length);
+}
+
+/**
+ * Returns if the given string is a valid CSS rotation.
+ * Ex: '45deg', '3.14rad', '400grad', '1turn', etc
+ * 
+ * @param {String} rotation The CSS rotation.
+ */
+export function isCSSRotation(rotation) {
+    const CSSRotationRegex = /^0$|^(\d*?.?\d+)(deg|rad|grad|turn)$/g;
+    return CSSRotationRegex.test(rotation);
+}
+
+
 export default {
     isInteger,
     isFunction,
@@ -143,4 +211,10 @@ export default {
     getIn,
     splitEntries,
     isEmptyObject,
+    isRGB,
+    isHex,
+    isHSL,
+    isColorName,
+    isCSSLength,
+    isCSSRotation,
 };
