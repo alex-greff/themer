@@ -268,7 +268,7 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
                 let computedInheritVals = {};
         
                 if (Utilities.isArray(inheritors)) {
-                    // Inject each mixin
+                    // Inject each inheritor
                     const computedInheritValsList = inheritors.map((inheritorDotPath) => injectInheritance(inheritorDotPath));
 
                     // Merge the returned array of computed subsections into one object
@@ -281,7 +281,7 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
                     // Inject the return value of the function after is it run
                     computedInheritVals = injectInheritance(inheritors()); 
                 } else {
-                    // Inject the single mixin
+                    // Inject the single inheritor
                     computedInheritVals = injectInheritance(inheritors);
                 }
 
