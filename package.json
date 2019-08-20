@@ -30,5 +30,8 @@
         "immutability-helper": "^3.0.1",
         "lodash.clone": "^4.5.0",
         "lodash.topath": "^4.5.2"
+    },
+    "devDependencies": {
+        "jest": "^24.9.0"
     }
 }
