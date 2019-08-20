@@ -220,6 +220,9 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
     // If the endpoint has not been hit yet
     if (Utilities.isObject(section)) {
         const evaluations = Object.entries(section).reduce((currSubSectionEvaluations, [subSectionName, subSection]) => {
+            // Evaluate the sub section if it is a function
+            subSection = (Utilities.isFunction(subSection)) ? subSection() : subSection;
+
             const allEvaluations = { ...computedEvaluations, ...currSubSectionEvaluations };
 
             // Inject any inheritance values
@@ -317,8 +320,14 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
  * @param {Object} customTypes Custom user-defined types.
  */
 export function generate(theme, schema, customTypes) {
+    // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
-    return evaluateSection("", schema.schema, theme, schema, registeredTypes);
+    
+    // Evaluate the schema if it is a function
+    const schemaEvaled = (Utilities.isFunction(schema.schema)) ? schema.schema() : schema.schema;
+
+    // Generate
+    return evaluateSection("", schemaEvaled, theme, schema, registeredTypes);
 }
 
 export default {
