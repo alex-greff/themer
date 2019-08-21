@@ -91,6 +91,8 @@ function validateItems(items) {
  * @param {Object} computedEvaluations Any evaluations that already have been computed from different sections.
  */
 function evaluateSection(path, section, theme, mixins, registeredTypes, computedEvaluations = {}) {
+    const isRoot = !path; // Is root if the path is an empty string
+
     // Check for invalid syntax
     if (Utilities.isArray(section))
         Errors.throwSyntaxError("Arrays are not allowed in schemas");
@@ -102,6 +104,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
     // Validate the items
     validateItems(allItems);
+
+    // Check the case where the root section is an empty object
+    if (Utilities.isEmptyObject(section) && isRoot) {
+        Errors.throwSchemaError("Schema must not be an empty object");
+    }
 
     // Base case: check for endpoint controls
     if (CHECKS.hasEndpointControls(allItems) || Utilities.isEmptyObject(section)) {
@@ -198,6 +205,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                     ...sectionSplit[1]
                 };
                 section = updatedSection;
+
+                // Check for the case where the root schema is empty after applying the mixins
+                if (Utilities.isEmptyObject(section) && isRoot) {
+                    Errors.throwSchemaError("Schema must not be an empty object");
+                }
 
             } else {
                 Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinName} at path '${toDotPath(path)}'. Must be a string.`);
@@ -328,10 +340,6 @@ export function generate(theme, schema, mixins = {}, customTypes = {}) {
 
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
-
-    if (Utilities.isEmptyObject(schema)) {
-        Errors.throwSchemaError("Schema must not be an empty object");
-    }
 
     // Generate
     return evaluateSection("", schema, theme, mixins, registeredTypes);
