@@ -102,7 +102,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         Errors.throwSyntaxError("Arrays are not allowed in themes");
 
     // Inject any mixins (making sure to remove the $mixin control)
-    const includedMixins = section[CONSTANTS.CONTROLS.MIXIN];
+    const includedMixins = section[CONSTANTS.CONTROLS.MIXINS];
     if (includedMixins) {
         function injectMixin(mixinName) {
             if (Utilities.isString(mixinName)) {
@@ -114,13 +114,13 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                     Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
                 }
 
-                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXIN, section);
+                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXINS, section);
 
                 // Reconstruct the section with the $mixin control removed
                 const updatedSection = {
                     ...sectionSplit[0],
                     ...mixinObj,
-                    [CONSTANTS.CONTROLS.MIXIN]: section[CONSTANTS.CONTROLS.MIXIN],
+                    [CONSTANTS.CONTROLS.MIXINS]: section[CONSTANTS.CONTROLS.MIXINS],
                     ...sectionSplit[1]
                 };
                 section = updatedSection;
@@ -143,7 +143,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
         // Remove the $mixin section
         section = update(section, {
-            $unset: [CONSTANTS.CONTROLS.MIXIN]
+            $unset: [CONSTANTS.CONTROLS.MIXINS]
         });
     }
 
