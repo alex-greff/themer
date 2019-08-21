@@ -52,6 +52,58 @@ describe("general cases", () => {
         expect(generated).toEqual(expectedOut);
     });
 
+    test("default values", () => {
+        const schema = {
+            "level-1a": {
+                $default: "foo"
+            },
+            "level-1b": {
+                $default: 5
+            },
+            "level-1c": {
+                $default: 0.556
+            },
+            "level-1d": {
+                $default: false
+            },
+            "level-1e": {
+                $default: () => "bar"
+            }
+        };
+
+        const theme = {};
+
+        const expectedOut = {
+            "level-1a": "foo",
+            "level-1b": 5,
+            "level-1c": 0.556,
+            "level-1d": false,
+            "level-1e": "bar",
+        };
+
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("invalid default type", () => {
+        const schema = {
+            "level-1": {
+                $default: {
+                    "some": "invalid stuff"
+                }
+            }
+        };
+
+        const theme = {};
+
+        const errorMessage = "Schema error: $default value of type object is not a valid type at path 'level-1'";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
     test("multi level deep", () => {
         const schema = {
             "level-1": {
