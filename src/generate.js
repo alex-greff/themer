@@ -118,7 +118,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             mixinObj = (Utilities.isFunction(mixinObj)) ? mixinObj() : mixinObj;
 
             if (!mixinObj) {
-                Errors.throwSchemaError(`Mixin '${mixinPath}' not found.`);
+                Errors.throwSchemaError(`Mixin '${mixinPath}' not found`);
             }
 
             const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXINS, section);
