@@ -23,6 +23,7 @@ export const getIn = (obj, key, def, p = 0) => {
     const path = toPath(key);
     while (obj && p < path.length) {
         obj = obj[path[p++]];
+        obj = isFunction(obj) ? obj() : obj;
     }
     return obj === undefined ? def : obj;
 };
