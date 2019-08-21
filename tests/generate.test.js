@@ -2,6 +2,7 @@ import CONSTANTS from "../src/constants";
 import { generate } from "../src/generate";
 
 const _ = CONSTANTS.SEPARATOR;
+
 describe("general cases", () => {
     test("1 level deep", () => {
         const schema = {
@@ -119,6 +120,32 @@ describe("general cases", () => {
         expect(generated).toEqual(expectedOut);
     });
 
+    test("empty schema", () => {
+        const schema = {};
+
+        const theme = {};
+
+        const errorMessage = "Schema error: Schema must not be an empty object";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);       
+    });
+
+    test("endpoint at root", () => {
+        const schema = {
+            $required: true
+        };
+
+        const theme = {};
+
+        const errorMessage = "Schema error: Endpoint controls at schema root are not valid";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
     test("schema with functions", () => {
         const schema = function () {
             return {
@@ -232,7 +259,7 @@ describe("general cases", () => {
     test("custom type", () => {
         const schema = {
             "level-1": {
-                "$type": "fooOnly"
+                $type: "fooOnly"
             }
         };
 
@@ -275,7 +302,7 @@ describe("general cases", () => {
     test("custom type function", () => {
         const schema = {
             "level-1": {
-                "$type": "fooOnly"
+                $type: "fooOnly"
             }
         };
 
@@ -315,5 +342,360 @@ describe("general cases", () => {
         expect(() => {
             generate(themeInvalid, schema, {}, customTypes);
         }).toThrow(errorMessage);
+    });
+});
+
+describe("mixin cases", () => {
+    test("simple mixin", () => {
+        const schema = {
+            "level-1": {
+                $mixins: "mixin-1"
+            }
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "level-2": {}
+            }
+        };
+
+        const theme = {
+            "level-1": {
+                "level-2": "foo"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1${_}level-2`]: "foo"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
+    }); 
+
+    test("deep level mixin", () => {
+        const schema = {
+            "level-1": {
+                $mixins: "mixin-1.sub-level-1.sub-level-2"
+            }
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "sub-level-1": { 
+                    "sub-level-2": {
+                        "level-2": {}
+                    }
+                }
+            }
+        };
+
+        const theme = {
+            "level-1": { 
+                "level-2": "foo"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1${_}level-2`]: "foo"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("mixin at root level", () => {
+        const schema = {
+            $mixins: "mixin-1"
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "level-1": {
+                    "level-2": {}
+                }
+            }
+        };
+
+        const theme = {
+            "level-1": {
+                "level-2": "foo"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1${_}level-2`]: "foo"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("empty mixin at root", () => {
+        const schema = {
+            $mixins: "mixin-1"
+        };
+
+        const mixins = {
+            "mixin-1": {}
+        };
+
+        const theme = {};
+
+        const errorMessage = "Schema error: Schema must not be an empty object";
+
+        expect(() => {
+            generate(theme, schema, mixins);
+        }).toThrow(errorMessage);   
+    });
+
+    test("mixin endpoint at root", () => {
+        const schema = {
+            $mixins: "mixin-1"
+        };
+
+        const mixins = {
+            "mixin-1": {
+                $required: true
+            }
+        };
+
+        const theme = {};
+
+        const errorMessage = "Schema error: Endpoint controls at schema root are not valid";
+
+        expect(() => {
+            generate(theme, schema, mixins);
+        }).toThrow(errorMessage);
+    });
+
+    test("empty mixin in sub-section", () => {
+        const schema = {
+            "level-1": {
+                $mixins: "mixin-1"
+            }
+        };
+
+        const mixins = {
+            "mixin-1": {}
+        };
+
+        const theme = {
+            "level-1": "foo"
+        };
+
+        const expectedOut = {
+            "level-1": "foo"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("multiple mixins", () => {
+        const schema = {
+            "level-1a": {
+                $mixins: ["mixin-1", "mixin-2"]
+            },
+            "level-1b": {
+                $mixins: ["mixin-1.level-2a"]
+            }
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "level-2a": {}
+            },
+            "mixin-2": {
+                "level-2b": {}
+            }
+        };
+
+        const theme = {
+            "level-1a": {
+                "level-2a": "foo",
+                "level-2b": "bar"
+            },
+            "level-1b": "foobar"
+        };
+
+        const expectedOut = {
+            [`level-1a${_}level-2a`]: "foo",
+            [`level-1a${_}level-2b`]: "bar",
+            [`level-1b`]: "foobar"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("mixins with functions", () => {
+        const schema = {
+            $mixins: "mixin-1",
+            "level-1c": {
+                $mixins: "mixin-1.level-1b"
+            }
+        };
+
+        const mixins = function() {
+            return {
+                "mixin-1"() {
+                    return {
+                        "level-1a"() {
+                            return {};
+                        },
+                        "level-1b"() {
+                            return {
+                                "level-2"() {
+                                    return {}
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        };
+
+        const theme = {
+            "level-1a": "foo",
+            "level-1b": {
+                "level-2": "bar"
+            },
+            "level-1c": {
+                "level-2": "foobar"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1a`]: "foo",
+            [`level-1b${_}level-2`]: "bar",
+            [`level-1c${_}level-2`]: "foobar"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut); 
+    });
+
+    test("mixin with invalid name", () => {
+        const schema = {
+            $mixins: "$required"
+        };
+
+        const mixin = {
+            "$required": {
+                "level-1": {}
+            }
+        };
+
+        const theme = {
+            "level-1": "foo"
+        };
+
+        const errorMessage = "Mixin error: Invalid mixin name '$required' at path ''";
+
+        expect(() => {
+            generate(theme, schema, mixin);
+        }).toThrow(errorMessage);
+    });
+
+    test("mixin with invalid syntax", () => {
+        const schema = {
+            $mixins: "mixin-1"
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "level-1": {
+                    "$invalid-control": "something"
+                }
+            }
+        };
+
+        const theme = {
+            "level-1": "foo"
+        };
+
+        const errorMessage = "Invalid syntax: Control '$invalid-control' does not exist";
+
+        expect(() => {
+            generate(theme, schema, mixins);
+        }).toThrow(errorMessage);
+    });
+
+    test("missing mixin", () => {
+        const schema = {
+            $mixins: "missing-mixin"
+        };
+
+        const mixins = {};
+
+        const theme = {};
+
+        const errorMessage = "Schema error: Mixin 'missing-mixin' not found";
+
+        expect(() => {
+            generate(theme, schema, mixins);
+        }).toThrow(errorMessage);
+    });
+
+    test("mixin with missing theme endpoint", () => {
+        const schema = {
+            $mixins: "mixin-1"
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "level-1": {
+                    "level-2": {}
+                }
+            }
+        };
+
+        const theme = {
+            "level-1": {}
+        };
+
+        const errorMessage = "Invalid theme: Theme subsection is missing at path partial 'level-1.level-2'";
+        
+        expect(() => {
+            generate(theme, schema, mixins);
+        }).toThrow(errorMessage);
+    });
+
+    test("mixin within mixin", () => {
+        const schema = {
+            $mixins: "mixin-1"
+        };
+
+        const mixins = {
+            "mixin-1": {
+                "level-1": {
+                    $mixins: "mixin-2"
+                }
+            },
+            "mixin-2": {
+                "level-2": {}
+            }
+        };
+
+        const theme = {
+            "level-1": {
+                "level-2": "foo"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1${_}level-2`]: "foo"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
     });
 });
