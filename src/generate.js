@@ -104,35 +104,38 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
     // Inject any mixins (making sure to remove the $mixin control)
     const includedMixins = section[CONSTANTS.CONTROLS.MIXINS];
     if (includedMixins) {
-        function injectMixin(mixinName) {
-            if (Utilities.isString(mixinName)) {
-                let mixinObj = Utilities.getIn(mixins, mixinName);
-                // Evaluate the mixin object if it is a function
-                mixinObj = (Utilities.isFunction(mixinObj)) ? mixinObj() : mixinObj;
-
-                if (!mixinObj) {
-                    Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
-                }
-
-                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXINS, section);
-
-                // Reconstruct the section with the $mixin control removed
-                const updatedSection = {
-                    ...sectionSplit[0],
-                    ...mixinObj,
-                    [CONSTANTS.CONTROLS.MIXINS]: section[CONSTANTS.CONTROLS.MIXINS],
-                    ...sectionSplit[1]
-                };
-                section = updatedSection;
-
-            } else {
-                Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinName} at path '${toDotPath(path)}'. Must be a string.`);
+        function injectMixin(mixinPath) {
+            if (!Utilities.isString(mixinPath)) {
+                Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinPath} at path '${toDotPath(path)}'. Must be a string.`);
             }
+
+            if (!CHECKS.isValidMixinPath(mixinPath)) {
+                Errors.throwMixinError(`Invalid mixin name '${mixinPath}' at path '${toDotPath(path)}'`);
+            }
+
+            let mixinObj = Utilities.getIn(mixins, mixinPath);
+            // Evaluate the mixin object if it is a function
+            mixinObj = (Utilities.isFunction(mixinObj)) ? mixinObj() : mixinObj;
+
+            if (!mixinObj) {
+                Errors.throwSchemaError(`Mixin '${mixinPath}' not found.`);
+            }
+
+            const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXINS, section);
+
+            // Reconstruct the section with the $mixin control removed
+            const updatedSection = {
+                ...sectionSplit[0],
+                ...mixinObj,
+                [CONSTANTS.CONTROLS.MIXINS]: section[CONSTANTS.CONTROLS.MIXINS],
+                ...sectionSplit[1]
+            };
+            section = updatedSection;
         }
 
         if (Utilities.isArray(includedMixins)) {
             // Inject each mixin
-            includedMixins.forEach((mixinName) => injectMixin(mixinName));
+            includedMixins.forEach((mixinPath) => injectMixin(mixinPath));
         } else if (Utilities.isFunction(includedMixins)) {
             // Inject the return value of the function after is it run
             injectMixin(includedMixins()); 
@@ -159,6 +162,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
     // Base case: check for endpoint controls
     if (CHECKS.hasEndpointControls(allItems) || Utilities.isEmptyObject(section)) {
+        // Check the case where endpoint controls on are the root section
+        if (isRoot) {
+            Errors.throwSchemaError("Endpoint controls at schema root are not valid");
+        }
+
         if (!CHECKS.allEndpointControls(allItems)) {
             Errors.throwSyntaxError("Endpoint has non-endpoint controls" + allItems);
         }

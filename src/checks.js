@@ -1,3 +1,4 @@
+import toPath from "lodash.topath";
 import defaultTypes from "./types";
 import CONSTANTS from "./constants";
 
@@ -75,6 +76,19 @@ export function isDefaultType(name) {
     return !!defaultTypes[name];
 }
 
+/**
+ * Returns if the given mixin path is valid.
+ * 
+ * @param {String} path The path to the mixin.
+ */
+export function isValidMixinPath(path) {
+    const pathArr = toPath(path);
+    
+    return pathArr.every(pathSection => {
+        return !isValidControl(pathSection)
+    });
+}
+
 export default {
     controlExists,
     isEndpointControl,
@@ -84,4 +98,5 @@ export default {
     isValidControl,
     isValidNonControl,
     isDefaultType,
+    isValidMixinPath,
 };

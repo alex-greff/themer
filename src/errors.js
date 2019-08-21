@@ -22,6 +22,10 @@ export function throwSchemaError(message) {
     throwErorr(`Schema error: ${message}`);
 }
 
+export function throwMixinError(message) {
+    throwErorr(`Mixin error: ${message}`);
+}
+
 export default {
     throwErorr,
     throwSyntaxError,
@@ -29,4 +33,5 @@ export default {
     throwTypeError,
     throwValidationError,
     throwSchemaError,
+    throwMixinError,
 };
