@@ -30,16 +30,10 @@ export const DEFAULT_ENDPOINT = {
     [CONTROLS.VALIDATE]: null
 };
 
-export const DEFAULT_SCHEMA = {
-    schema: {},
-    mixins: {}
-};
-
 export default {
     SEPARATOR,
     CONTROLS,
     ENDPOINT_CONTROLS,
     INJECTION_CONTROLS,
     DEFAULT_ENDPOINT,
-    DEFAULT_SCHEMA
 };

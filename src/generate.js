@@ -316,31 +316,21 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
  * 
  * @param {Object|Function} theme The theme.
  * @param {Object|Function} schema The schema.
+ * @param {Object|Function} mixins The mixins.
  * @param {Object|Function} customTypes Custom user-defined types.
  */
-export function generate(theme, schema, customTypes = {}) {
+export function generate(theme, schema, mixins = {}, customTypes = {}) {
     // Run the parameters if they are functions
     theme = (Utilities.isFunction(theme)) ? theme() : theme;
     schema = (Utilities.isFunction(schema)) ? schema() : schema;
+    mixins = (Utilities.isFunction(mixins)) ? mixins() : mixins;
     customTypes = (Utilities.isFunction(customTypes)) ? customTypes() : customTypes;
 
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
-    // Make sure schema has the default form
-    schema = {
-        ...CONSTANTS.DEFAULT_SCHEMA,
-        ...schema
-    };
-    
-    // Evaluate the schema, if it is a function
-    const schemaEvaled = (Utilities.isFunction(schema.schema)) ? schema.schema() : schema.schema;
-
-    // Evaluate the mixins, if it is a function
-    const mixinsEvaled = (Utilities.isFunction(schema.mixins)) ? schema.mixins() : schema.mixins;
-
     // Generate
-    return evaluateSection("", schemaEvaled, theme, mixinsEvaled, registeredTypes);
+    return evaluateSection("", schema, theme, mixins, registeredTypes);
 }
 
 export default {
