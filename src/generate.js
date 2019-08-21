@@ -1,4 +1,3 @@
-import update from "immutability-helper";
 import defaultTypes from "./types";
 import Utilities from "./utilities";
 import Errors from "./errors";
