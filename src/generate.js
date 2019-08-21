@@ -100,6 +100,44 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
     if (Utilities.isArray(theme))
         Errors.throwSyntaxError("Arrays are not allowed in themes");
 
+    // Inject any mixins (making sure to remove the $mixin control)
+    const includedMixins = section[CONSTANTS.CONTROLS.MIXIN];
+    if (includedMixins) {
+        function injectMixin(mixinName) {
+            if (Utilities.isString(mixinName)) {
+                const mixinObj = Utilities.getIn(mixins, mixinName);
+
+                if (!mixinObj) {
+                    Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
+                }
+
+                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXIN, section);
+
+                // Reconstruct the section with the $mixin control removed
+                const updatedSection = {
+                    ...sectionSplit[0],
+                    ...mixinObj,
+                    ...sectionSplit[1]
+                };
+                section = updatedSection;
+
+            } else {
+                Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinName} at path '${toDotPath(path)}'. Must be a string.`);
+            }
+        }
+
+        if (Utilities.isArray(includedMixins)) {
+            // Inject each mixin
+            includedMixins.forEach((mixinName) => injectMixin(mixinName));
+        } else if (Utilities.isFunction(includedMixins)) {
+            // Inject the return value of the function after is it run
+            injectMixin(includedMixins()); 
+        } else {
+            // Inject the single mixin
+            injectMixin(includedMixins);
+        }
+    }
+
     const allItems = Object.keys(section);
 
     // Validate the items
@@ -113,7 +151,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
     // Base case: check for endpoint controls
     if (CHECKS.hasEndpointControls(allItems) || Utilities.isEmptyObject(section)) {
         if (!CHECKS.allEndpointControls(allItems)) {
-            Errors.throwSyntaxError("Endpoint has non-endpoint controls");
+            Errors.throwSyntaxError("Endpoint has non-endpoint controls" + allItems);
         }
 
         // Theme should be a string, function or undefined/null now
@@ -183,49 +221,6 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         evaluateType(type, themeVal, registeredTypes);
 
         return { [path]: themeVal };
-    }
-
-    // Inject any mixins (making sure to remove the $mixin control)
-    const includedMixins = section[CONSTANTS.CONTROLS.MIXIN];
-    if (includedMixins) {
-        function injectMixin(mixinName) {
-            if (Utilities.isString(mixinName)) {
-                const mixinObj = Utilities.getIn(mixins, mixinName);
-
-                if (!mixinObj) {
-                    Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
-                }
-
-                const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXIN, section);
-
-                // Reconstruct the section with the $mixin control removed
-                const updatedSection = {
-                    ...sectionSplit[0],
-                    ...mixinObj,
-                    ...sectionSplit[1]
-                };
-                section = updatedSection;
-
-                // Check for the case where the root schema is empty after applying the mixins
-                if (Utilities.isEmptyObject(section) && isRoot) {
-                    Errors.throwSchemaError("Schema must not be an empty object");
-                }
-
-            } else {
-                Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinName} at path '${toDotPath(path)}'. Must be a string.`);
-            }
-        }
-
-        if (Utilities.isArray(includedMixins)) {
-            // Inject each mixin
-            includedMixins.forEach((mixinName) => injectMixin(mixinName));
-        } else if (Utilities.isFunction(includedMixins)) {
-            // Inject the return value of the function after is it run
-            injectMixin(includedMixins()); 
-        } else {
-            // Inject the single mixin
-            injectMixin(includedMixins);
-        }
     }
     
     // If the endpoint has not been hit yet
