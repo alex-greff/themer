@@ -328,7 +328,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                     // Merge the returned array of computed subsections into one object
                     computedInheritVals = computedInheritValsList.reduce((acc, currValsObj) => ({
                         ...acc,
-                        currValsObj
+                        ...currValsObj
                     }), {});
 
                 } else if (Utilities.isFunction(inheritors)) {
