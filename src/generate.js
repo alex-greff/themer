@@ -171,9 +171,9 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             Errors.throwSyntaxError("Endpoint has non-endpoint controls" + allItems);
         }
 
-        // Theme should be a string, function or undefined/null now
+        // Theme should be a string, function, number, boolean or undefined/null now
         if (theme && !CHECKS.isValidEndpointValueType(theme)) {
-            Errors.throwInvalidThemeError(`Theme endpoint should be a string or function at path '${toDotPath(path)}'`);
+            Errors.throwInvalidThemeError(`Theme endpoint should be a valid value type at path '${toDotPath(path)}'`);
         }
 
         // Get the theme value
@@ -228,7 +228,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         }
 
         // Case: $default not provided and no theme provided
-        if (!defaultVal && !themeVal) {
+        if (Utilities.isUndefinedOrNull(defaultVal) && Utilities.isUndefinedOrNull(themeVal)) {
             Errors.throwValidationError(`No theme and default value provided at path '${path}'`);
         }
 
@@ -345,7 +345,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             const isOnlyInheritsSubSection = Object.keys(subSection).length === 1 && !!subSection[CONSTANTS.CONTROLS.INHERITES];
 
             // Only throw an error if the theme value does not exist and the only item in the subsection is not an $inherits control
-            if (!themeSubSection && !isOnlyInheritsSubSection) {
+            if (Utilities.isUndefinedOrNull(themeSubSection) && !isOnlyInheritsSubSection) {
                 Errors.throwInvalidThemeError(`Theme subsection is missing at path partial '${toDotPath(newPath)}'`);
             }
 

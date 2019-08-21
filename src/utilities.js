@@ -22,6 +22,15 @@ export const isArray = (obj) => Array.isArray(obj);
 /** Is the given object a boolean? */
 export const isBoolean = (obj) => typeof obj === "boolean";
 
+/** Is the given object null? */
+export const isNull = (obj) => obj === null && typeof obj === "object";
+
+/** Is the given object undefined? */
+export const isUndefined = (obj) => typeof obj === "undefined";
+
+/** Is the given object undefined or null? */
+export const isUndefinedOrNull = (obj) => isUndefined(obj) || isNull(obj);
+
 /**
  * Deeply get a value from an object via its path.
  */
@@ -216,6 +225,9 @@ export default {
     isString,
     isArray,
     isBoolean,
+    isNull,
+    isUndefined,
+    isUndefinedOrNull,
     setIn,
     getIn,
     splitEntries,
