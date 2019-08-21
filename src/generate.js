@@ -251,13 +251,27 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             // Inject any inheritance values
             const isInheritance = (subSectionName === CONSTANTS.CONTROLS.INHERITES);
             if (isInheritance) {
+                function isInherited(basePath, subPath) {
+                    const basePathSplit = basePath.split(CONSTANTS.SEPARATOR);
+                    const subPathSplit = subPath.split(CONSTANTS.SEPARATOR);
+
+                    if (basePathSplit.length > subPathSplit.length) {
+                        return false;
+                    }
+
+                    // All base sections must match the sub-base sections up to the last base section item
+                    return basePathSplit.every((basePathVal, index) => {
+                        return basePathVal === subPathSplit[index];
+                    });
+                }
+
                 function injectInheritance(inheritorDotPath) {
                     if (Utilities.isString(inheritorDotPath)) {
                         const inheritorPath = convertDotPath(inheritorDotPath);
 
                         // Get all evaluations that are a part of the inheritor
                         const inheritorEvals = Object.entries(allEvaluations).reduce((acc, [evalPath, evalVal]) => {
-                            const partOfInheritor = evalPath.startsWith(inheritorPath);
+                            const partOfInheritor = isInherited(inheritorPath, evalPath);
 
                             if (partOfInheritor) {
                                 return { ...acc, [evalPath]: evalVal };
@@ -273,7 +287,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                         // Convert all the inheritor values keys to the current sub section 
                         const subSectionVals = Object.entries(inheritorEvals).reduce((acc, [inheritorEvalPath, val]) => {
                             const inheritedPath = inheritorEvalPath.replace(inheritorPath, path);
-
+                            
                             return {
                                 ...acc,
                                 [inheritedPath]: val
