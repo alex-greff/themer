@@ -220,11 +220,22 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         }
 
         // Case: $default provided and no theme provided
-        if (defaultVal && !themeVal) {
-            // Evaluate default value
-            evaluateType(type, defaultVal, registeredTypes);
+        if (!CHECKS.isValidEndpointValueType(themeVal)) {
+            if (CHECKS.isValidEndpointValueType(defaultVal) || Utilities.isFunction(defaultVal)) {
+                // Execute default value if it is a function
+                const defaultValEvaled = (Utilities.isFunction(defaultVal)) ? defaultVal() : defaultVal;
 
-            return { [path]: defaultVal };
+                if (!CHECKS.isValidEndpointValueType(defaultValEvaled)) {
+                    Errors.throwSchemaError(`Invalid ${CONSTANTS.CONTROLS.DEFAULT} type of '${typeof defaultValEvaled}' at path '${toDotPath(path)}'`);
+                }
+
+                // Evaluate default value
+                evaluateType(type, defaultValEvaled, registeredTypes);
+
+                return { [path]: defaultValEvaled };
+            } else {
+                Errors.throwSchemaError(`${CONSTANTS.CONTROLS.DEFAULT} value of type ${typeof defaultVal} is not a valid type at path '${toDotPath(path)}'`);
+            }
         }
 
         // Case: $default not provided and no theme provided
@@ -343,9 +354,10 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             const newPath = addToPath(path, subSectionName);
 
             const isOnlyInheritsSubSection = Object.keys(subSection).length === 1 && !!subSection[CONSTANTS.CONTROLS.INHERITES];
+            const hasEndpoints = CHECKS.hasEndpointControls(Object.keys(subSection));
 
             // Only throw an error if the theme value does not exist and the only item in the subsection is not an $inherits control
-            if (Utilities.isUndefinedOrNull(themeSubSection) && !isOnlyInheritsSubSection) {
+            if (Utilities.isUndefinedOrNull(themeSubSection) && !(isOnlyInheritsSubSection || hasEndpoints)) {
                 Errors.throwInvalidThemeError(`Theme subsection is missing at path partial '${toDotPath(newPath)}'`);
             }
 
