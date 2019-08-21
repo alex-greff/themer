@@ -289,7 +289,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                         }, {});
 
                         if (Utilities.isEmptyObject(inheritorEvals)) {
-                            Errors.throwSchemaError(`No inheritance has been computed for '${inheritorDotPath}'. This might be because it is defined after the inheritance definition.`);
+                            Errors.throwSchemaError(`No inheritance values have been computed for '${inheritorDotPath}'. This might be because it is defined after the inheritance definition.`);
                         }
 
                         // Convert all the inheritor values keys to the current sub section 
