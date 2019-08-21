@@ -2,7 +2,7 @@ import clone from "lodash.clone";
 import toPath from "lodash.topath";
 
 /** Is the given object an integer? */
-export const isInteger = (obj) => String(Math.floor(Number(obj))) === obj;
+export const isInteger = (obj) => Number.isInteger(obj);
 
 /** Is the given object a number? */
 export const isNumber = (obj) => typeof obj === "number";
