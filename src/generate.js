@@ -309,7 +309,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
                         return subSectionVals;    
                     } else {
-                        Errors.throwSyntaxError(`Invalid inheritance type ${typeof inheritorDotPath} at path '${toDotPath(path)}'. Must be a string.`);
+                        Errors.throwSchemaError(`Invalid inheritance type ${typeof inheritorDotPath} at path '${toDotPath(path)}'. Must be a string.`);
                     }
                 }
 
@@ -320,57 +320,12 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                 const inheritors = subSection;
 
                 let computedInheritVals = {};
-        
+
                 if (Utilities.isArray(inheritors)) {
-                    // Inject each inheritor
-                    const computedInheritValsList = inheritors.map((inheritorDotPath) => injectInheritance(inheritorDotPath));
-
-                    console.log("computedInheritValsList:", computedInheritValsList);
-
-                    function getLowestLevelInheritance(computedInheritValsList) {
-                        let lowestLength = Infinity;
-
-                        computedInheritValsList.forEach(inheritanceValsList => {
-                            Object.keys(inheritanceValsList).forEach((currInheritancePath) => {
-                                const pathSplit = currInheritancePath.split(CONSTANTS.SEPARATOR);
-
-                                if (pathSplit.length <= lowestLength) {
-                                    lowestLength = pathSplit.length; 
-                                }
-                            });
-                        });
-
-                        return lowestLength;
-                    }
-
-                    const lowestLevelInheritanceLevel = getLowestLevelInheritance(computedInheritValsList)
-
-                    // Merge the returned array of computed subsections into one object
-                    computedInheritVals = computedInheritValsList.reduce((acc, currValsObj) => {
-                        const filteredCurrValsObj = Object.entries(currValsObj).reduce((acc, [currInheritancePath, currVal]) => {
-                            const currInheritanceLength = currInheritancePath.split(CONSTANTS.SEPARATOR).length;
-
-                            if (currInheritanceLength === lowestLevelInheritanceLevel) {
-                                return {
-                                    ...acc,
-                                    [currInheritancePath]: currVal
-                                };
-                            };
-
-                            return  { ...acc };
-                        }, {});
-
-                        // return {
-                        //     ...acc,
-                        //     ...currValsObj
-                        // }
-                        return { 
-                            ...acc,
-                            ...filteredCurrValsObj
-                        };
-                    }, {});
-
-                } else if (Utilities.isFunction(inheritors)) {
+                    Errors.throwSchemaError(`Arrays are not allowed with ${CONSTANTS.CONTROLS.INHERITES}`);
+                }
+        
+                if (Utilities.isFunction(inheritors)) {
                     // Inject the return value of the function after is it run
                     computedInheritVals = injectInheritance(inheritors()); 
                 } else {
