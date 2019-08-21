@@ -86,11 +86,11 @@ function validateItems(items) {
  * @param {String} path The current path.
  * @param {Object} section The current section.
  * @param {Object} theme The current theme section.
- * @param {Object} fullSchema The complete schema.
+ * @param {Object} mixins The mixins.
  * @param {Object} registeredTypes All the registered types.
  * @param {Object} computedEvaluations Any evaluations that already have been computed from different sections.
  */
-function evaluateSection(path, section, theme, fullSchema, registeredTypes, computedEvaluations = {}) {
+function evaluateSection(path, section, theme, mixins, registeredTypes, computedEvaluations = {}) {
     // Check for invalid syntax
     if (Utilities.isArray(section))
         Errors.throwSyntaxError("Arrays are not allowed in schemas");
@@ -179,11 +179,11 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
     }
 
     // Inject any mixins (making sure to remove the $mixin control)
-    const mixins = section[CONSTANTS.CONTROLS.MIXIN];
-    if (mixins) {
+    const includedMixins = section[CONSTANTS.CONTROLS.MIXIN];
+    if (includedMixins) {
         function injectMixin(mixinName) {
             if (Utilities.isString(mixinName)) {
-                const mixinObj = Utilities.getIn(fullSchema.mixins, mixinName);
+                const mixinObj = Utilities.getIn(mixins, mixinName);
 
                 if (!mixinObj) {
                     Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
@@ -204,15 +204,15 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
             }
         }
 
-        if (Utilities.isArray(mixins)) {
+        if (Utilities.isArray(includedMixins)) {
             // Inject each mixin
-            mixins.forEach((mixinName) => injectMixin(mixinName));
-        } else if (Utilities.isFunction(mixins)) {
+            includedMixins.forEach((mixinName) => injectMixin(mixinName));
+        } else if (Utilities.isFunction(includedMixins)) {
             // Inject the return value of the function after is it run
-            injectMixin(mixins()); 
+            injectMixin(includedMixins()); 
         } else {
             // Inject the single mixin
-            injectMixin(mixins);
+            injectMixin(includedMixins);
         }
     }
     
@@ -301,7 +301,7 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
             }
 
             // Recursively evaluate the sub sections
-            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, fullSchema, registeredTypes, allEvaluations);
+            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, mixins, registeredTypes, allEvaluations);
 
             return { ...currSubSectionEvaluations, ...subSectionEvaluations };
         }, {});
@@ -314,11 +314,16 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
 /**
  * Generates the shema with the given template and returns out the object with the key-value pairs.
  * 
- * @param {Object} theme The theme.
- * @param {Object} schema The schema.
- * @param {Object} customTypes Custom user-defined types.
+ * @param {Object|Function} theme The theme.
+ * @param {Object|Function} schema The schema.
+ * @param {Object|Function} customTypes Custom user-defined types.
  */
 export function generate(theme, schema, customTypes = {}) {
+    // Run the parameters if they are functions
+    theme = (Utilities.isFunction(theme)) ? theme() : theme;
+    schema = (Utilities.isFunction(schema)) ? schema() : schema;
+    customTypes = (Utilities.isFunction(customTypes)) ? customTypes() : customTypes;
+
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
@@ -328,11 +333,14 @@ export function generate(theme, schema, customTypes = {}) {
         ...schema
     };
     
-    // Evaluate the schema if it is a function
+    // Evaluate the schema, if it is a function
     const schemaEvaled = (Utilities.isFunction(schema.schema)) ? schema.schema() : schema.schema;
 
+    // Evaluate the mixins, if it is a function
+    const mixinsEvaled = (Utilities.isFunction(schema.mixins)) ? schema.mixins() : schema.mixins;
+
     // Generate
-    return evaluateSection("", schemaEvaled, theme, schema, registeredTypes);
+    return evaluateSection("", schemaEvaled, theme, mixinsEvaled, registeredTypes);
 }
 
 export default {
