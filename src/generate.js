@@ -290,7 +290,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
             // Do the regular theme value computation
 
-            const themeSubSection = theme[subSectionName];
+            const themeSubSection = Utilities.isFunction(theme[subSectionName]) ? theme[subSectionName]() : theme[subSectionName];
             const newPath = addToPath(path, subSectionName);
 
             const isOnlyInheritsSubSection = Object.keys(subSection).length === 1 && !!subSection[CONSTANTS.CONTROLS.INHERITES];
