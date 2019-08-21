@@ -1,6 +1,7 @@
 import toPath from "lodash.topath";
 import defaultTypes from "./types";
 import CONSTANTS from "./constants";
+import Utilities from "./utilities";
 
 /**
  * Checks if the given control exists.
@@ -89,6 +90,17 @@ export function isValidMixinPath(path) {
     });
 }
 
+/**
+ * Returns if the given endpoint value is a valid type.
+ * 
+ * @param {String|Number|Boolean} value The endpoint value.
+ */
+export function isValidEndpointValueType(value) {
+    return Utilities.isString(value) ||
+        Utilities.isNumber(value) ||
+        Utilities.isBoolean(value);
+}
+
 export default {
     controlExists,
     isEndpointControl,
@@ -99,4 +111,5 @@ export default {
     isValidNonControl,
     isDefaultType,
     isValidMixinPath,
+    isValidEndpointValueType,
 };

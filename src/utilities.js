@@ -4,6 +4,9 @@ import toPath from "lodash.topath";
 /** Is the given object an integer? */
 export const isInteger = (obj) => String(Math.floor(Number(obj))) === obj;
 
+/** Is the given object a number? */
+export const isNumber = (obj) => typeof obj === "number";
+
 /** Is the given object a Function? */
 export const isFunction = (obj) => typeof obj === 'function';
 
@@ -15,6 +18,9 @@ export const isString = (obj) => Object.prototype.toString.call(obj) === '[objec
 
 /** Is the given object an array? */
 export const isArray = (obj) => Array.isArray(obj);
+
+/** Is the given object a boolean? */
+export const isBoolean = (obj) => typeof obj === "boolean";
 
 /**
  * Deeply get a value from an object via its path.
@@ -204,10 +210,12 @@ export function isCSSRotation(rotation) {
 
 export default {
     isInteger,
+    isNumber,
     isFunction,
     isObject,
     isString,
     isArray,
+    isBoolean,
     setIn,
     getIn,
     splitEntries,

@@ -172,7 +172,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         }
 
         // Theme should be a string, function or undefined/null now
-        if (theme && !Utilities.isString(theme) && !Utilities.isFunction(theme)) {
+        if (theme && !CHECKS.isValidEndpointValueType(theme)) {
             Errors.throwInvalidThemeError(`Theme endpoint should be a string or function at path '${toDotPath(path)}'`);
         }
 
@@ -297,7 +297,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                             const inheritedPath = inheritorEvalPath.replace(inheritorPath, path);
 
                             // Check if there is an attempted theme override for the given inheritance value
-                            if (theme && Utilities.isString(theme)) {
+                            if (theme && CHECKS.isValidEndpointValueType(theme)) {
                                 Errors.throwInvalidThemeError(`Setting value of already computed inheritance value is invalid at path '${toDotPath(path)}'`);
                             }
 
