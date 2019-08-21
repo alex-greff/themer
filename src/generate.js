@@ -1,3 +1,4 @@
+import update from "immutability-helper";
 import defaultTypes from "./types";
 import Utilities from "./utilities";
 import Errors from "./errors";
@@ -117,6 +118,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                 const updatedSection = {
                     ...sectionSplit[0],
                     ...mixinObj,
+                    [CONSTANTS.CONTROLS.MIXIN]: section[CONSTANTS.CONTROLS.MIXIN],
                     ...sectionSplit[1]
                 };
                 section = updatedSection;
@@ -136,6 +138,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             // Inject the single mixin
             injectMixin(includedMixins);
         }
+
+        // Remove the $mixin section
+        section = update(section, {
+            $unset: [CONSTANTS.CONTROLS.MIXIN]
+        });
     }
 
     const allItems = Object.keys(section);
