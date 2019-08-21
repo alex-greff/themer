@@ -246,6 +246,14 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             // Evaluate the sub section if it is a function
             subSection = (Utilities.isFunction(subSection)) ? subSection() : subSection;
 
+            // Handle case where inheritor and endpoint controls are in the same sub-section
+            const hasInheritance = subSection[CONSTANTS.CONTROLS.INHERITES];
+            const hasEndpointControls = CHECKS.hasEndpointControls(Object.keys(subSection));
+
+            if (hasInheritance && hasEndpointControls) {
+                Errors.throwSchemaError(`The inheritance control and endpoint controls are not valid in the same sub-section. At path '${toDotPath(path)}'`);
+            }
+
             const allEvaluations = { ...computedEvaluations, ...currSubSectionEvaluations };
 
             // Inject any inheritance values
@@ -287,7 +295,12 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                         // Convert all the inheritor values keys to the current sub section 
                         const subSectionVals = Object.entries(inheritorEvals).reduce((acc, [inheritorEvalPath, val]) => {
                             const inheritedPath = inheritorEvalPath.replace(inheritorPath, path);
-                            
+
+                            // Check if there is an attempted theme override for the given inheritance value
+                            if (theme && Utilities.isString(theme)) {
+                                Errors.throwInvalidThemeError(`Setting value of already computed inheritance value is invalid at path '${toDotPath(path)}'`);
+                            }
+
                             return {
                                 ...acc,
                                 [inheritedPath]: val
@@ -298,6 +311,10 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                     } else {
                         Errors.throwSyntaxError(`Invalid inheritance type ${typeof inheritorDotPath} at path '${toDotPath(path)}'. Must be a string.`);
                     }
+                }
+
+                if (isRoot) {
+                    Errors.throwSchemaError(`${CONSTANTS.CONTROLS.INHERITES} is not valid at schema root`);
                 }
 
                 const inheritors = subSection;
