@@ -329,6 +329,10 @@ export function generate(theme, schema, mixins = {}, customTypes = {}) {
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
+    if (Utilities.isEmptyObject(schema)) {
+        Errors.throwSchemaError("Schema must not be an empty object");
+    }
+
     // Generate
     return evaluateSection("", schema, theme, mixins, registeredTypes);
 }
