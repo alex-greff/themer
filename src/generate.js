@@ -319,7 +319,7 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
  * @param {Object} schema The schema.
  * @param {Object} customTypes Custom user-defined types.
  */
-export function generate(theme, schema, customTypes) {
+export function generate(theme, schema, customTypes = {}) {
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
