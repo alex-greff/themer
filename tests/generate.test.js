@@ -22,6 +22,36 @@ describe("general cases", () => {
         expect(generated).toEqual(expectedOut);
     });
 
+    test("endpoint value types", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {},
+            "level-1c": {},
+            "level-1d": {},
+            "level-1e": {},
+        };
+
+        const theme = {
+            "level-1a": "foo",
+            "level-1b": 5,
+            "level-1c": 0.556,
+            "level-1d": false,
+            "level-1e": () => "bar",
+        };
+
+        const expectedOut = {
+            "level-1a": "foo",
+            "level-1b": 5,
+            "level-1c": 0.556,
+            "level-1d": false,
+            "level-1e": "bar",
+        };
+
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
     test("multi level deep", () => {
         const schema = {
             "level-1": {
