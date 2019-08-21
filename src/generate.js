@@ -3,7 +3,7 @@ import defaultTypes from "./types";
 import Utilities from "./utilities";
 import Errors from "./errors";
 import CONSTANTS from "./constants";
-import CHECKS from "./checks";
+import Checks from "./checks";
 
 
 /**
@@ -68,13 +68,13 @@ function evaluateType(typeName, value, registeredTypes = defaultTypes) {
  */
 function validateItems(items) {
     return items.every((item) => {
-        if (CHECKS.isValidControl(item)) {
+        if (Checks.isValidControl(item)) {
             // Control must exist
-            if (!CHECKS.controlExists(item)) {
+            if (!Checks.controlExists(item)) {
                 Errors.throwSyntaxError(`Control '${item}' does not exist`);
             }
         } else {
-            if (!CHECKS.isValidNonControl(item)) {
+            if (!Checks.isValidNonControl(item)) {
                 Errors.throwSyntaxError(`Item '${item}' is not valid.`);
             }
         }
@@ -109,7 +109,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                 Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinPath} at path '${toDotPath(path)}'. Must be a string.`);
             }
 
-            if (!CHECKS.isValidMixinPath(mixinPath)) {
+            if (!Checks.isValidMixinPath(mixinPath)) {
                 Errors.throwMixinError(`Invalid mixin name '${mixinPath}' at path '${toDotPath(path)}'`);
             }
 
@@ -161,19 +161,19 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
     }
 
     // Base case: check for endpoint controls
-    if (CHECKS.hasEndpointControls(allItems) || Utilities.isEmptyObject(section)) {
+    if (Checks.hasEndpointControls(allItems) || Utilities.isEmptyObject(section)) {
         // Check the case where endpoint controls on are the root section
         if (isRoot) {
             Errors.throwSchemaError("Endpoint controls at schema root are not valid");
         }
 
-        if (!CHECKS.allEndpointControls(allItems)) {
+        if (!Checks.allEndpointControls(allItems)) {
             Errors.throwSyntaxError("Endpoint has non-endpoint controls" + allItems);
         }
 
         // Theme should be a string, function, number, boolean or undefined/null now
-        if (theme && !CHECKS.isValidEndpointValueType(theme)) {
-            Errors.throwInvalidThemeError(`Theme endpoint should be a valid value type at path '${toDotPath(path)}'`);
+        if (theme && !Checks.isValidEndpointValueType(theme)) {
+            Errors.throwThemeError(`Theme endpoint should be a valid value type at path '${toDotPath(path)}'`);
         }
 
         // Get the theme value
@@ -220,12 +220,12 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         }
 
         // Case: $default provided and no theme provided
-        if (!CHECKS.isValidEndpointValueType(themeVal)) {
-            if (CHECKS.isValidEndpointValueType(defaultVal) || Utilities.isFunction(defaultVal)) {
+        if (!Checks.isValidEndpointValueType(themeVal)) {
+            if (Checks.isValidEndpointValueType(defaultVal) || Utilities.isFunction(defaultVal)) {
                 // Execute default value if it is a function
                 const defaultValEvaled = (Utilities.isFunction(defaultVal)) ? defaultVal() : defaultVal;
 
-                if (!CHECKS.isValidEndpointValueType(defaultValEvaled)) {
+                if (!Checks.isValidEndpointValueType(defaultValEvaled)) {
                     Errors.throwSchemaError(`Invalid ${CONSTANTS.CONTROLS.DEFAULT} type of '${typeof defaultValEvaled}' at path '${toDotPath(path)}'`);
                 }
 
@@ -259,7 +259,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
             // Handle case where inheritor and endpoint controls are in the same sub-section
             const hasInheritance = subSection[CONSTANTS.CONTROLS.INHERITES];
-            const hasEndpointControls = CHECKS.hasEndpointControls(Object.keys(subSection));
+            const hasEndpointControls = Checks.hasEndpointControls(Object.keys(subSection));
 
             if (hasInheritance && hasEndpointControls) {
                 Errors.throwSchemaError(`The inheritance control and endpoint controls are not valid in the same sub-section. At path '${toDotPath(path)}'`);
@@ -308,8 +308,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                             const inheritedPath = inheritorEvalPath.replace(inheritorPath, path);
 
                             // Check if there is an attempted theme override for the given inheritance value
-                            if (theme && CHECKS.isValidEndpointValueType(theme)) {
-                                Errors.throwInvalidThemeError(`Setting value of already computed inheritance value is invalid at path '${toDotPath(path)}'`);
+                            if (theme && Checks.isValidEndpointValueType(theme)) {
+                                Errors.throwThemeError(`Setting value of already computed inheritance value is invalid at path '${toDotPath(path)}'`);
                             }
 
                             return {
@@ -354,11 +354,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             const newPath = addToPath(path, subSectionName);
 
             const isOnlyInheritsSubSection = Object.keys(subSection).length === 1 && !!subSection[CONSTANTS.CONTROLS.INHERITES];
-            const hasEndpoints = CHECKS.hasEndpointControls(Object.keys(subSection));
+            const hasEndpoints = Checks.hasEndpointControls(Object.keys(subSection));
 
             // Only throw an error if the theme value does not exist and the only item in the subsection is not an $inherits control
             if (Utilities.isUndefinedOrNull(themeSubSection) && !(isOnlyInheritsSubSection || hasEndpoints)) {
-                Errors.throwInvalidThemeError(`Theme subsection is missing at path partial '${toDotPath(newPath)}'`);
+                Errors.throwThemeError(`Theme subsection is missing at path partial '${toDotPath(newPath)}'`);
             }
 
             // Recursively evaluate the sub sections

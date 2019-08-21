@@ -1,4 +1,4 @@
-import CHECKS from "./checks";
+import Checks from "./checks";
 import Errors from "./errors";
 
 export class TypeBuilder {
@@ -14,7 +14,7 @@ export class TypeBuilder {
      */
     addType(name, validator) {
         // Check if default type
-        if (CHECKS.isDefaultType(name)) {
+        if (Checks.isDefaultType(name)) {
             Errors.throwTypeError(`Type '${name}' is a default type.`);
         }
 

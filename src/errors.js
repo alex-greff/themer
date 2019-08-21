@@ -6,7 +6,7 @@ export function throwSyntaxError(message) {
     throwErorr(`Invalid syntax: ${message}`);
 }
 
-export function throwInvalidThemeError(message) {
+export function throwThemeError(message) {
     throwErorr(`Invalid theme: ${message}`);
 }
 
@@ -29,7 +29,7 @@ export function throwMixinError(message) {
 export default {
     throwErorr,
     throwSyntaxError,
-    throwInvalidThemeError,
+    throwThemeError,
     throwTypeError,
     throwValidationError,
     throwSchemaError,
