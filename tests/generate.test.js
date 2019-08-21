@@ -699,3 +699,237 @@ describe("mixin cases", () => {
         expect(generated).toEqual(expectedOut);
     });
 });
+
+describe("inheritance cases", () => {
+    test("simple inheritance", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo"
+        };
+
+        const expectedOut =  {
+            "level-1a": "foo",
+            "level-1b": "foo"
+        };
+
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("deep inheritance", () => {
+        const schema = {
+            "level-1a": {
+                "level-2a": {
+                    "level-3a": {}
+                }, 
+                "level-2b": {}
+            },
+            "level-1b": {
+                $inherits: "level-1a.level-2a.level-3a"
+            },
+            "level-1c": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": {
+                "level-2a": {
+                    "level-3a": "foo"
+                },
+                "level-2b": "bar"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1a${_}level-2a${_}level-3a`]: "foo",
+            [`level-1a${_}level-2b`]: "bar",
+            [`level-1b`]: "foo",
+            [`level-1c${_}level-2a${_}level-3a`]: "foo",
+            [`level-1c${_}level-2b`]: "bar"
+        };
+
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("multiple inheritances attempt", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {},
+            "level-1c": {
+                $inherits: ["level-1a", "level-1b"]
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo",
+            "level-1b": "bar"
+        };
+
+        const errorMessage = "Schema error: Arrays are not allowed with $inherits";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
+    test("missing inheritance", () => {
+        const schema = {
+            "level-1b": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo"
+        };
+
+        const errorMessage = "Schema error: No inheritance values have been computed for 'level-1a'. This might be because it is defined after the inheritance definition.";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
+    test("attempted inheritance override in theme", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo",
+            "level-1b": "bar"
+        };
+
+        const errorMessage = "Invalid theme: Setting value of already computed inheritance value is invalid at path 'level-1b'";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
+    test("inheritance and endpoint control in same sub-section", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {
+                $inherits: "level-1a",
+                $required: false
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo",
+        };
+
+        const errorMessage = "The inheritance control and endpoint controls are not valid in the same sub-section. At path ''";
+
+        expect(() => {
+            generate(theme,schema)
+        }).toThrow(errorMessage);
+    });
+
+    test("inheritance at schema root", () => {
+        const schema = {
+            "level-1": {},
+            $inherits: "level-1"
+        };
+
+        const theme = {
+            "level-1": "foo"
+        };
+
+        const errorMessage = "Schema error: $inherits is not valid at schema root";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
+    test("inherits with a function", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {
+                $inherits() {
+                    return "level-1a"
+                }
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo"
+        };
+
+        const expectedOut = {
+            "level-1a": "foo",
+            "level-1b": "foo"
+        };
+
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("circular inheritance", () => {
+        const schema = {
+            "level-1": {
+                $inherits: "level-1"
+            }
+        };
+
+        const theme = {
+            "level-1": "foo"
+        };
+
+        const errorMessage = "No inheritance values have been computed for 'level-1'. This might be because it is defined after the inheritance definition.";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
+    test("inheritance within inheritance", () => {
+        const schema = {
+            "level-1a": {},
+            "level-1b": {
+                "level-2a": {
+                    $inherits: "level-1a"
+                },
+                "level-2b": {}
+            },
+            "level-1c": {
+                $inherits: "level-1b"
+            }
+        };
+
+        const theme = {
+            "level-1a": "foo",
+            "level-1b": {
+                "level-2b": "bar"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1a`]: "foo",
+            [`level-1b${_}level-2a`]: "foo",
+            [`level-1b${_}level-2b`]: "bar",
+            [`level-1c${_}level-2a`]: "foo",
+            [`level-1c${_}level-2b`]: "bar"
+        };
+
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
+    });
+});
