@@ -106,7 +106,9 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
     if (includedMixins) {
         function injectMixin(mixinName) {
             if (Utilities.isString(mixinName)) {
-                const mixinObj = Utilities.getIn(mixins, mixinName);
+                let mixinObj = Utilities.getIn(mixins, mixinName);
+                // Evaluate the mixin object if it is a function
+                mixinObj = (Utilities.isFunction(mixinObj)) ? mixinObj() : mixinObj;
 
                 if (!mixinObj) {
                     Errors.throwSchemaError(`Mixin '${mixinName}' not found.`);
