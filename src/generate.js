@@ -105,7 +105,7 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
     validateItems(allItems);
 
     // Base case: check for endpoint controls
-    if (CHECKS.hasEndpointControls(allItems)) {
+    if (CHECKS.hasEndpointControls(allItems) || Utilities.isEmptyObject(section)) {
         if (!CHECKS.allEndpointControls(allItems)) {
             Errors.throwSyntaxError("Endpoint has non-endpoint controls");
         }

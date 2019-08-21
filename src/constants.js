@@ -1,3 +1,5 @@
+import anyType from "./types/any.type";
+
 export const SEPARATOR = "__";
 
 export const CONTROLS = {
@@ -23,7 +25,7 @@ export const INJECTION_CONTROLS = [
 
 export const DEFAULT_ENDPOINT = {
     [CONTROLS.REQUIRED]: false,
-    [CONTROLS.TYPE]: "all",
+    [CONTROLS.TYPE]: anyType.name,
     [CONTROLS.DEFAULT]: null,
     [CONTROLS.VALIDATE]: null
 };
