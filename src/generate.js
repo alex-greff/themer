@@ -322,6 +322,12 @@ function evaluateSection(path, section, theme, fullSchema, registeredTypes, comp
 export function generate(theme, schema, customTypes) {
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
+
+    // Make sure schema has the default form
+    schema = {
+        ...CONSTANTS.DEFAULT_SCHEMA,
+        ...schema
+    };
     
     // Evaluate the schema if it is a function
     const schemaEvaled = (Utilities.isFunction(schema.schema)) ? schema.schema() : schema.schema;
