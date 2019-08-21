@@ -52,7 +52,7 @@ export function isInjectionControl(control) {
  * @param {String} control The potential control.
  */
 export function isValidControl(control) {
-    const controlRegex = /^\$\w+$/;
+    const controlRegex = /^\$.+$/;
     return controlRegex.test(control);
 }
 
