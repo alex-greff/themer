@@ -8,7 +8,7 @@ export const CONTROLS = {
     DEFAULT: "$default",
     VALIDATE: "$validate",
     INHERITES: "$inherits",
-    MIXIN: "$mixin"
+    MIXIN: "$mixins"
 };
 
 export const ENDPOINT_CONTROLS = [
