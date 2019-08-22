@@ -29,6 +29,7 @@ describe("general cases", () => {
             "level-1c": {},
             "level-1d": {},
             "level-1e": {},
+            "level-1f": {},
         };
 
         const theme = {
@@ -37,6 +38,7 @@ describe("general cases", () => {
             "level-1c": 0.556,
             "level-1d": false,
             "level-1e": () => "bar",
+            "level-1f": { "foo": "bar" }
         };
 
         const expectedOut = {
@@ -45,6 +47,7 @@ describe("general cases", () => {
             "level-1c": 0.556,
             "level-1d": false,
             "level-1e": "bar",
+            "level-1f": { "foo": "bar" }
         };
 
         const generated = generate(theme, schema);
@@ -68,6 +71,9 @@ describe("general cases", () => {
             },
             "level-1e": {
                 $default: () => "bar"
+            },
+            "level-1f": {
+                $default: { "foo": "bar" }
             }
         };
 
@@ -79,6 +85,7 @@ describe("general cases", () => {
             "level-1c": 0.556,
             "level-1d": false,
             "level-1e": "bar",
+            "level-1f": { "foo": "bar" }
         };
 
         const generated = generate(theme, schema);
@@ -86,11 +93,11 @@ describe("general cases", () => {
         expect(generated).toEqual(expectedOut);
     });
 
-    test("invalid default type", () => {
+    test("invalid default type containing endpoint controls", () => {
         const schema = {
             "level-1": {
                 $default: {
-                    "some": "invalid stuff"
+                    $required: true
                 }
             }
         };
@@ -212,6 +219,42 @@ describe("general cases", () => {
         expect(() => {
             generate(theme, schema);
         }).toThrow(errorMessage);       
+    });
+
+    test("invalid endpoint value at root", () => {
+        const schema = {
+            "level-1": "foo"
+        };
+
+        const theme = {
+            "level-1": "bar"
+        };
+
+        const errorMessage = "Schema error: Invalid endpoint section of type 'string' at path 'level-1'";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
+    });
+
+    test("invalid endpoint value in subsection", () => {
+        const schema = {
+            "level-1": {
+                "foo": false
+            }
+        };
+
+        const theme = {
+            "level-1": {
+                "foo": "bar"
+            }
+        };
+
+        const errorMessage = "Schema error: Invalid endpoint section of type 'boolean' at path 'level-1.foo'";
+
+        expect(() => {
+            generate(theme, schema);
+        }).toThrow(errorMessage);
     });
 
     test("endpoint at root", () => {
