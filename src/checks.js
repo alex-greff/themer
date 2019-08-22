@@ -98,7 +98,8 @@ export function isValidMixinPath(path) {
 export function isValidEndpointValueType(value) {
     return Utilities.isString(value) ||
         Utilities.isNumber(value) ||
-        Utilities.isBoolean(value);
+        Utilities.isBoolean(value) ||
+        (Utilities.isObject(value) && !hasEndpointControls(Object.keys(value)));
 }
 
 export default {

@@ -368,6 +368,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
         }, {});
 
         return evaluations;
+    } else {
+        Errors.throwSchemaError(`Invalid endpoint section of type '${typeof section}' at path '${toDotPath(path)}'`);
     }
 }
 
