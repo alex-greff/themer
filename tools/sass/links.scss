@@ -44,6 +44,5 @@
 
     $base-link: base-link($path-partials...);
 
-    // Construct CSS variable
     @return rgba($base-link, $opacity);
 }
