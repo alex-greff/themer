@@ -1,0 +1,49 @@
+@import "./constants.scss";
+@import "./utilities.scss";
+@import "./errors.scss";
+
+@function _construct-path($partials...) {
+    $path: "--";
+    
+    @for $i from 0 to length($partials) {
+        $curr-partial: nth($partials, $i + 1);
+        $separator: if($i == 0, "", $LINK-SEPARATOR);
+        $path: $path + $separator + $curr-partial;
+    }
+
+    @return $path;
+}
+
+// Generates a CSS variable linkage with the given partials
+@function base-link($partials...) {
+    // Checks 
+    @if length($partials) == 0 {
+        $error: throw-invalid-link-arguments-error();
+    }
+
+    $path: _construct-path($partials...);
+    @return var(unquote($path));
+}
+
+
+// Generates valid color-link CSS
+// Ex:
+// color: color-link("button", "text-color", "primary");
+// background-color: color-link("button", "background-color", "secondary", 0.5);
+@function color-link($partials...) {
+    // Checks 
+    @if length($partials) == 1 and is-number(nth($partials, length($partials))) {
+        $error: throw-invalid-link-arguments-error();
+    }
+
+    $has-opacity-arg: is-number(nth($partials, length($partials)));
+
+    $opacity: if($has-opacity-arg, nth($partials, length($partials)), 1);
+
+    $path-partials: if($has-opacity-arg, slice($partials, 1, length($partials) - 1), $partials);
+
+    $base-link: base-link($path-partials...);
+
+    // Construct CSS variable
+    @return rgba($base-link, $opacity);
+}

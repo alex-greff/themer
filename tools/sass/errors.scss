@@ -1,0 +1,3 @@
+@function throw-invalid-link-arguments-error() {
+    @error "Invalid link arguments. Must have at least one partial path.";
+}
