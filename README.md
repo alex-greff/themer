@@ -26,11 +26,11 @@ This package is the core package for my personal system for setting up structure
 For the time being I haven't put this up on NPM yet (I want to finish the frontend library implementation packages for it first) so this repo must be reference directly in your package.json file. The `master` branch will contain the most up to date and stable version of it.
 
 **package.json**
-```json
+```js
 {
-    ...
+    // ...
     "dependencies": {
-        ...
+        // ...
         "themer@core": "alex-greff/themer"
     }
 }
