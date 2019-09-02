@@ -196,7 +196,7 @@ export function isColorName(color) {
 
 /**
  * Returns if the given string is a valid CSS length.
- * Ex: '5rem', '20%', '15px, etc
+ * Ex: '5rem', '20%', '15px', etc
  * 
  * @param {String} length The CSS length.
  */
