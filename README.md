@@ -11,11 +11,12 @@ A base library for setting up structured CSS/SCSS themes in frontend web applica
     * [Endpoints](#endpoints)
       * [Endpoint Configuration](#endpoint-configuration)
     * [Base Types](#base-types)
+    * [Themes](#themes)
     * [Mixins](#mixins)
     * [Inheritance](#inheritance)
-    * [Themes](#themes)
     * [Custom Types](#custom-types)
 * [Extra Tools](#extra-tools)
+    * [SASS Tools](#sass-tools)
 
 ## What is this package?
 
@@ -144,23 +145,382 @@ Adding any values manually will result in the respective default configuration o
 | Length   |  `"length"`  | CSS [length](https://www.w3schools.com/cssref/css_units.asp) values.   | `"5px"`, `"0"`, `0`, `"20rem"`, `"100vh"`                                     |
 | Rotation | `"rotation"` | CSS [rotation](https://www.quackit.com/css/functions/css_rotate_function.cfm) values. | `"45deg"`, `"0"`, `0`, `"3.14rad"`, `"400grad"`, `"1turn"`                    |
 
+### Themes
+
+Themes are used populate the given schema models with values when generating the schema with `Themer.generate`.
+
+**Example:**
+
+```js
+// schema
+{
+    "level-1a": {
+        "level-2a": {}
+        "level-2b": {
+            "level-3a": {}
+        }
+    },
+    "level-1b": {
+        "level-2c": {}
+    }
+}
+
+// theme
+{
+    "level-1a": {
+        "level-2a": "foo",
+        "level-2b": {
+            "level-3a": "bar"
+        }
+    },
+    "level-1b": {
+        "level-2c": "foobar"
+    }
+}
+
+// output from Themer.generate
+{
+    "level-1a__level-2a": "foo",
+    "level-1a__level-2b__level-3a": "bar",
+    "level-1b__level-2c": "foobar"
+}
+```
 
 ### Mixins
 
-TODO: complete
+Mixins allow for injecting parts of schema configuration into the main schema allowing for greater reusability. 
+
+*Note:* Mixins are injected **before** evaluation of the schema and the theme.
+
+Multiple mixins can be injected in one location by using an array in the `$mixins` control.
+
+Mixins are also injected relative to their location in the schema and their array order so common properties before it will be overridden and common properties after it will override it.
+
+
+*Tip:* mixins can also be nested within mixins themselves - just be careful of circular mixins!
+
+**Example:**
+```js
+// schema
+{
+    "Global": {
+        $mixins: "section"
+    }
+}
+
+// mixins
+{
+    "section": {
+        "background-color": {
+            $mixins: "background"
+        },
+        "text-color": {
+            $mixins: "text"
+        }
+    },
+    "background": {
+        $mixins: ["base-modifiers", "extra-modifiers"]
+    },
+    "text": {
+        $mixins: "base-modifiers"
+    },
+    "base-modifiers": {
+        "primary": {
+            $type: "color",
+            $required: true
+        },
+        "secondary": {
+            $type: "color",
+            $required: true
+        }
+    },
+    "extra-modifiers": {
+        "tertiary": {
+            $type: "color",
+            $required: true
+        },
+        "quaternary": {
+            $type: "color",
+            $required: true
+        }
+    }
+}
+
+// evaluated as
+{
+    "Global": {
+        "background-color": {
+            "primary": {
+                $type: "color",
+                $required: true
+            },
+            "secondary": {
+                $type: "color",
+                $required: true
+            },
+            "tertiary": {
+                $type: "color",
+                $required: true
+            },
+            "quaternary": {
+                $type: "color",
+                $required: true
+            }
+        },
+        "text-color": {
+            "primary": {
+                $type: "color",
+                $required: true
+            }, 
+            "secondary": {
+                $type: "color",
+                $required: true
+            }
+        }
+    }
+}
+
+// theme
+{
+    "Global": {
+        "background-color": {
+            "primary": "#FFFFFF",
+            "secondary": "#E1E1E1",
+            "tertiary": "#BDEFEA",
+            "quaternary": "#8FC8C2"
+        },
+        "text-color": {
+            "primary": "black",
+            "secondary": "#4D4D4D"
+        }
+    }
+}
+
+// output from Themer.generate
+{
+    "Global__background-color__primary": "#FFFFFF",
+    "Global__background-color__secondary": "#E1E1E1",
+    "Global__background-color__tertiary": "#BDEFEA",
+    "Global__background-color__quaternary": "#8FC8C2",
+    "Global__text-color__primary": "black",
+    "Global__text-color__secondary": "#4D4D4D"
+}
+```
 
 ### Inheritance
 
-TODO: complete
+Inheritance allows sections of the schema to inherit the values from already computed sections of the schema. 
 
-### Themes
+They can be thought of as similar to mixins but are injected **after** evaluation. 
 
-TODO: complete
+*Note #1:* at the moment only single inheritance is supported.
+
+*Note #2*: dot-path accessors can also be used to select nested inheritance sections (i.e. `"level-1.level-2"`).
+
+**Example:**
+```js
+// Let's take the previous mixins example and add more sections to the base schema
+
+// schema
+{
+    "Global": {
+        $mixins: "section"
+    },
+    "Button": {
+        $inherits: "Global"
+    }
+}
+
+// mixins
+{
+    "section": {
+        "background-color": {
+            $mixins: "background"
+        },
+        "text-color": {
+            $mixins: "text"
+        }
+    },
+    "background": {
+        $mixins: ["base-modifiers", "extra-modifiers"]
+    },
+    "text": {
+        $mixins: "base-modifiers"
+    },
+    "base-modifiers": {
+        "primary": {
+            $type: "color",
+            $required: true
+        },
+        "secondary": {
+            $type: "color",
+            $required: true
+        }
+    },
+    "extra-modifiers": {
+        "tertiary": {
+            $type: "color",
+            $required: true
+        },
+        "quaternary": {
+            $type: "color",
+            $required: true
+        }
+    }
+}
+
+// evaluated as
+{
+    "Global": {
+        "background-color": {
+            "primary": {
+                $type: "color",
+                $required: true
+            },
+            "secondary": {
+                $type: "color",
+                $required: true
+            },
+            "tertiary": {
+                $type: "color",
+                $required: true
+            },
+            "quaternary": {
+                $type: "color",
+                $required: true
+            }
+        },
+        "text-color": {
+            "primary": {
+                $type: "color",
+                $required: true
+            }, 
+            "secondary": {
+                $type: "color",
+                $required: true
+            }
+        }
+    },
+    "Button": {
+        $inherits: "Global"
+    }
+}
+
+// theme
+{
+    "Global": {
+        "background-color": {
+            "primary": "#FFFFFF",
+            "secondary": "#E1E1E1",
+            "tertiary": "#BDEFEA",
+            "quaternary": "#8FC8C2"
+        },
+        "text-color": {
+            "primary": "black",
+            "secondary": "#4D4D4D"
+        }
+    },
+    "Button": {
+        "background-color": {
+            "primary": "#2CDEF0",
+            "secondary": "#1D8D99",
+            "tertiary": "#29A2E2",
+            "quaternary": "#3592C4"
+        }
+        // By leaving "text-color" out, it will just be evaluated to the same value as it is in "Global"
+    }
+}
+
+// output from Themer.generate
+{
+    "Global__background-color__primary": "#FFFFFF",
+    "Global__background-color__secondary": "#E1E1E1",
+    "Global__background-color__tertiary": "#BDEFEA",
+    "Global__background-color__quaternary": "#8FC8C2",
+    "Global__text-color__primary": "black",
+    "Global__text-color__secondary": "#4D4D4D",
+    "Button__background-color__primary": "#2CDEF0",
+    "Button__background-color__secondary": "#1D8D99",
+    "Button__background-color__tertiary": "#29A2E2",
+    "Button__background-color__quaternary": "#3592C4",
+    "Button__text-color__primary": "black",
+    "Button__text-color__secondary": "#4D4D4D",
+}
+```
 
 ### Custom Types
 
-TODO: complete
+Added custom types is supported via the `registeredTypes` parameter in `Themer.generate`.
+
+Adding custom types can be done manually by adding object key-values with the following form:
+```js
+[name]: {
+    name: String, // The $type
+    validator: Function // The validation function
+}
+```
+
+To make adding custom types simpler the `TypeBuilder` builder class can be used.
+
+**Usage:**
+```js
+// ES5
+const TypeBuilder = require("themer@core").TypeBuilder;
+
+// ES6+
+import { TypeBuilder } from "themer@core";
+
+// Create instance
+const tb = new TypeBuilder();
+
+// Add custom types
+tb.add("isFoo", (val) => val.includes("foo"));
+
+// Build the object to pass into Themer.generate
+const registeredTypes = tb.build();
+
+// registeredTypes = {
+//     "isFoo": {
+//         name: "isFoo",
+//         validator: (val) => val.includes("foo")     
+//     }   
+// }
+```
 
 ## Extra Tools
 
-TODO: complete
+### SASS Tools
+
+To make linking to the theme easier the following SCSS functions have been built. 
+
+*Note:* this assumes that [CSS variables](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties) with the generated theme values is in scope of the styles using these functions.
+
+**Usage:**
+```scss
+@import "[path to themer]/tools/sass/index.scss";
+```
+
+**Functions:**
+```scss
+// Generates a CSS var reference of the given path partials
+// Ex: base-link("level-1", "level-2") -> var(--level-1__level-2)
+some-propety: base-link($path-partials...);
+
+
+// Generates a CSS var reference specifically for colors
+// Note: color-link only supports rgba color values so non-rgba values must be converted when injected the CSS variables
+// Ex: base-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2), 0.5)
+some-propety: color-link($path-partials...[, $opacity: 1]);
+```
+
+**Example:**
+```scss
+// Assume that the previous theme example has been generated and injected as CSS variables
+
+@import "[path to themer]/tools/sass/index.scss";
+
+.some-selector {
+    color: color-link("General", "text-color", "primary");
+    background-color: color-link("General", "background-color", "secondary", 0.5);
+}
+```
