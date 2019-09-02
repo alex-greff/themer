@@ -140,9 +140,9 @@ Adding any values manually will result in the respective default configuration o
 | Number   |  `"number"`  | Number values.       | `0`, `1.56`, `-1005`                                                     |
 | Integer  | `"integer"`  | Integer values.      | `0`, `5`, `-5060`                                                        |
 | String   |  `"string"`  | String values.       | `"foo"`, `"0"`, `"false"`                                                |
-| Color    |  `"color"`   | CSS color values.    | `"#567a3b"`, `"red"`, `"rgba(45, 200, 30, 0.5)"`, `"hsl(50, 100%, 50%)"` |
-| Length   |  `"length"`  | CSS length values.   | `"5px"`, `"0"`, `0`, `"20rem"`, `"100vh"`                                     |
-| Rotation | `"rotation"` | CSS rotation values. | `"45deg"`, `"0"`, `0`, `"3.14rad"`, `"400grad"`, `"1turn"`                    |
+| Color    |  `"color"`   | CSS [color](https://www.w3schools.com/colors/default.asp) values.    | `"#567a3b"`, `"red"`, `"rgba(45, 200, 30, 0.5)"`, `"hsl(50, 100%, 50%)"` |
+| Length   |  `"length"`  | CSS [length](https://www.w3schools.com/cssref/css_units.asp) values.   | `"5px"`, `"0"`, `0`, `"20rem"`, `"100vh"`                                     |
+| Rotation | `"rotation"` | CSS [rotation](https://www.quackit.com/css/functions/css_rotate_function.cfm) values. | `"45deg"`, `"0"`, `0`, `"3.14rad"`, `"400grad"`, `"1turn"`                    |
 
 
 ### Mixins
