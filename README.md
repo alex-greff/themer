@@ -133,7 +133,17 @@ Adding any values manually will result in the respective default configuration o
 
 ### Base Types
 
-TODO: complete
+| Type     | $type Value  | Description          | Examples                                                                 |
+|----------|:------------:|----------------------|--------------------------------------------------------------------------|
+| Any      |   `"any"`    | Any value.           | -                                                                        |
+| Boolean  | `"boolean"`  | Boolean values.      | `true`, `false`                                                          |
+| Number   |  `"number"`  | Number values.       | `0`, `1.56`, `-1005`                                                     |
+| Integer  | `"integer"`  | Integer values.      | `0`, `5`, `-5060`                                                        |
+| String   |  `"string"`  | String values.       | `"foo"`, `"0"`, `"false"`                                                |
+| Color    |  `"color"`   | CSS color values.    | `"#567a3b"`, `"red"`, `"rgba(45, 200, 30, 0.5)"`, `"hsl(50, 100%, 50%)"` |
+| Length   |  `"length"`  | CSS length values.   | `"5px"`, `"0"`, `"20rem"`, `"100vh"`                                     |
+| Rotation | `"rotation"` | CSS rotation values. | `"45deg"`, `"0"`, `"3.14rad"`, `"400grad"`, `"1turn"`                    |
+
 
 ### Mixins
 
