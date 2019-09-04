@@ -1,5 +1,6 @@
 import clone from "lodash.clone";
 import toPath from "lodash.topath";
+import Color from "color";
 
 /** Is the given object an integer? */
 export const isInteger = (obj) => Number.isInteger(obj);
@@ -216,6 +217,20 @@ export function isCSSRotation(rotation) {
     return CSSRotationRegex.test(rotation);
 }
 
+/**
+ * Returns a standardized version of the given color.
+ * Ex: "rgb(30, 56, 60)" -> "30, 56, 60"
+ *
+ * @param {String} color The color.
+ */
+export function standardizeColor(color) {
+    let aColorRgb = Color(color).rgb().array();
+    aColorRgb = aColorRgb.slice(0, 3); // Remove alpha value, if it exists
+    const sColorString = aColorRgb.join(", ");
+
+    return sColorString;
+}
+
 
 export default {
     isInteger,
@@ -238,4 +253,5 @@ export default {
     isColorName,
     isCSSLength,
     isCSSRotation,
+    standardizeColor
 };
