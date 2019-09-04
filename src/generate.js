@@ -1,5 +1,6 @@
 import update from "immutability-helper";
 import defaultTypes from "./types";
+import colorType from "./types/color.type";
 import Utilities from "./utilities";
 import Errors from "./errors";
 import CONSTANTS from "./constants";
@@ -11,32 +12,35 @@ import Checks from "./checks";
  * 
  * @param {String} currentPath The current path.
  * @param {String} addition The section addition.
+ * @param {Object} options Generation options.
  */
-function addToPath(currentPath, addition) {
+function addToPath(currentPath, addition, options) {
     if (!currentPath) {
         return addition;
     }
 
-    return `${currentPath}${CONSTANTS.SEPARATOR}${addition}`;
+    return `${currentPath}${options.SEPARATOR}${addition}`;
 }
 
 /**
  * Converts the given dot path to the standard path string.
  * 
  * @param {String} dotPath The dot path.
+ * @param {Object} options Generation options.
  */
-function convertDotPath(dotPath) {
+function convertDotPath(dotPath, options) {
     const split = dotPath.split(".");
-    return split.join(CONSTANTS.SEPARATOR);
+    return split.join(options.SEPARATOR);
 }
 
 /**
  * Converts the internal path representation to the dot path format.
  * 
  * @param {String} path The path.
+ * @param {Object} options Generation options.
  */
-function toDotPath(path) {
-    const split = path.split(CONSTANTS.SEPARATOR);
+function toDotPath(path, options) {
+    const split = path.split(options.SEPARATOR);
     return split.join(".");
 }
 
@@ -82,6 +86,28 @@ function validateItems(items) {
 }
 
 /**
+ * Computes a return entry for the generate method.
+ * 
+ * @param {*} themeVal The theme value.
+ * @param {String} path The path of the entry.
+ * @param {String} type The type of the theme value.
+ * @param {Object} registeredTypes The registered types.
+ * @param {Object} options The generate options.
+ */
+function computeReturnEntry(themeVal, path, type, registeredTypes, options) {
+    // Evaluate theme value
+    evaluateType(type, themeVal, registeredTypes);
+
+    // If endpoint is color type and color standardization is enabled
+    if (type === colorType.name && options.STANDARDIZE_COLORS) {
+        // Standardize the color
+        themeVal = Utilities.standardizeColor(themeVal);
+    }
+
+    return { [path]: themeVal };
+}
+
+/**
  * Recursively evaluates the given section with the theme.
  * 
  * @param {String} path The current path.
@@ -89,9 +115,10 @@ function validateItems(items) {
  * @param {Object} theme The current theme section.
  * @param {Object} mixins The mixins.
  * @param {Object} registeredTypes All the registered types.
+ * @param {Object} options Options used when generating.
  * @param {Object} computedEvaluations Any evaluations that already have been computed from different sections.
  */
-function evaluateSection(path, section, theme, mixins, registeredTypes, computedEvaluations = {}) {
+function evaluateSection(path, section, theme, mixins, registeredTypes, options = {}, computedEvaluations = {}) {
     const isRoot = !path; // Is root if the path is an empty string
 
     // Check for invalid syntax
@@ -106,11 +133,13 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
     if (includedMixins) {
         function injectMixin(mixinPath) {
             if (!Utilities.isString(mixinPath)) {
-                Errors.throwSyntaxError(`Invalid mixin type ${typeof mixinPath} at path '${toDotPath(path)}'. Must be a string.`);
+                const errMsg = `Invalid mixin type ${typeof mixinPath} at path '${toDotPath(path, options)}'. Must be a string.`;
+                Errors.throwSyntaxError(errMsg);
             }
 
             if (!Checks.isValidMixinPath(mixinPath)) {
-                Errors.throwMixinError(`Invalid mixin name '${mixinPath}' at path '${toDotPath(path)}'`);
+                const errMsg = `Invalid mixin name '${mixinPath}' at path '${toDotPath(path, options)}'`;
+                Errors.throwMixinError(errMsg);
             }
 
             let mixinObj = Utilities.getIn(mixins, mixinPath);
@@ -118,7 +147,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             mixinObj = (Utilities.isFunction(mixinObj)) ? mixinObj() : mixinObj;
 
             if (!mixinObj) {
-                Errors.throwSchemaError(`Mixin '${mixinPath}' not found`);
+                const errMsg = `Mixin '${mixinPath}' not found`;
+                Errors.throwSchemaError(errMsg);
             }
 
             const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXINS, section);
@@ -173,15 +203,15 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
         // Theme should be a string, function, number, boolean or undefined/null now
         if (theme && !Checks.isValidEndpointValueType(theme)) {
-            Errors.throwThemeError(`Theme endpoint should be a valid value type at path '${toDotPath(path)}'`);
+            Errors.throwThemeError(`Theme endpoint should be a valid value type at path '${toDotPath(path, options)}'`);
         }
 
         // Get the theme value
-        const themeVal = Utilities.isFunction(theme) ? theme() : theme;
+        let themeVal = Utilities.isFunction(theme) ? theme() : theme;
 
         // Get the endpoint object
         const endpoint = {
-            ...CONSTANTS.DEFAULT_ENDPOINT,
+            ...options.DEFAULT_ENDPOINT,
             ...section,
         }
 
@@ -200,55 +230,47 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                 }
             };
 
-            // Evaluate using the validator by spoofing it as a registered 
-            evaluateType(validatorName, themeVal, validatorRegistration);
-
-            return { [path]: themeVal };
+            return computeReturnEntry(themeVal, path, validatorName, validatorRegistration, options);
         }
 
         // Case: $required=true
         if (required) {
             // No theme value provided
             if (!themeVal) {
-                Errors.throwValidationError(`No theme value provided when ${CONSTANTS.CONTROLS.REQUIRED}=true at path '${toDotPath(path)}'`);
+                const errMsg = `No theme value provided when ${CONSTANTS.CONTROLS.REQUIRED}=true at path '${toDotPath(path, options)}'`;
+                Errors.throwValidationError(errMsg);
             }
 
-            // Evaluate the type
-            evaluateType(type, themeVal, registeredTypes);
+            return computeReturnEntry(themeVal, path, type, registeredTypes, options);
+        }
+        
+        const defaultValEvaled = (Utilities.isFunction(defaultVal)) ? defaultVal() : defaultVal;
 
-            return { [path]: themeVal };
+        // Validate the default value, if it exists
+        if (!Utilities.isUndefinedOrNull(defaultValEvaled)) {
+            const isValidDefaultVal = Checks.isValidEndpointValueType(defaultValEvaled);
+
+            if (!isValidDefaultVal) {
+                const errMsg = `${CONSTANTS.CONTROLS.DEFAULT} value of type ${typeof defaultVal} is not a valid type at path '${toDotPath(path, options)}'`;
+                Errors.throwSchemaError(errMsg);
+            }
         }
 
-        // Case: $default provided and no theme provided
-        if (!Checks.isValidEndpointValueType(themeVal)) {
-            if (Checks.isValidEndpointValueType(defaultVal) || Utilities.isFunction(defaultVal)) {
-                // Execute default value if it is a function
-                const defaultValEvaled = (Utilities.isFunction(defaultVal)) ? defaultVal() : defaultVal;
-
-                if (!Checks.isValidEndpointValueType(defaultValEvaled)) {
-                    Errors.throwSchemaError(`Invalid ${CONSTANTS.CONTROLS.DEFAULT} type of '${typeof defaultValEvaled}' at path '${toDotPath(path)}'`);
-                }
-
-                // Evaluate default value
-                evaluateType(type, defaultValEvaled, registeredTypes);
-
-                return { [path]: defaultValEvaled };
-            } else {
-                Errors.throwSchemaError(`${CONSTANTS.CONTROLS.DEFAULT} value of type ${typeof defaultVal} is not a valid type at path '${toDotPath(path)}'`);
-            }
+        // Case: $default provided and theme does not exist
+        if (!Utilities.isUndefinedOrNull(defaultValEvaled) && Utilities.isUndefinedOrNull(themeVal)) {
+            // Evaluate default value and generate path entry
+            return computeReturnEntry(defaultValEvaled, path, type, registeredTypes, options);
         }
 
         // Case: $default not provided and no theme provided
         if (Utilities.isUndefinedOrNull(defaultVal) && Utilities.isUndefinedOrNull(themeVal)) {
-            Errors.throwValidationError(`No theme and default value provided at path '${path}'`);
+            const errMsg = `Theme subsection is missing at path partial '${toDotPath(path, options)}'`;
+            Errors.throwThemeError(errMsg);
         }
 
         // Case: Everything passes and theme value exists
-        
-        // Evaluate theme value
-        evaluateType(type, themeVal, registeredTypes);
 
-        return { [path]: themeVal };
+        return computeReturnEntry(themeVal, path, type, registeredTypes, options);
     }
     
     // If the endpoint has not been hit yet
@@ -262,7 +284,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             const hasEndpointControls = Checks.hasEndpointControls(Object.keys(subSection));
 
             if (hasInheritance && hasEndpointControls) {
-                Errors.throwSchemaError(`The inheritance control and endpoint controls are not valid in the same sub-section. At path '${toDotPath(path)}'`);
+                const errMsg = `The inheritance control and endpoint controls are not valid in the same sub-section. At path '${toDotPath(path, options)}'`;
+                Errors.throwSchemaError(errMsg);
             }
 
             const allEvaluations = { ...computedEvaluations, ...currSubSectionEvaluations };
@@ -271,8 +294,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             const isInheritance = (subSectionName === CONSTANTS.CONTROLS.INHERITES);
             if (isInheritance) {
                 function isInherited(basePath, subPath) {
-                    const basePathSplit = basePath.split(CONSTANTS.SEPARATOR);
-                    const subPathSplit = subPath.split(CONSTANTS.SEPARATOR);
+                    const basePathSplit = basePath.split(options.SEPARATOR);
+                    const subPathSplit = subPath.split(options.SEPARATOR);
 
                     if (basePathSplit.length > subPathSplit.length) {
                         return false;
@@ -286,7 +309,7 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
                 function injectInheritance(inheritorDotPath) {
                     if (Utilities.isString(inheritorDotPath)) {
-                        const inheritorPath = convertDotPath(inheritorDotPath);
+                        const inheritorPath = convertDotPath(inheritorDotPath, options);
 
                         // Get all evaluations that are a part of the inheritor
                         const inheritorEvals = Object.entries(allEvaluations).reduce((acc, [evalPath, evalVal]) => {
@@ -300,7 +323,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
                         }, {});
 
                         if (Utilities.isEmptyObject(inheritorEvals)) {
-                            Errors.throwSchemaError(`No inheritance values have been computed for '${inheritorDotPath}'. This might be because it is defined after the inheritance definition.`);
+                            const errMsg = `No inheritance values have been computed for '${inheritorDotPath}'. This might be because it is defined after the inheritance definition.`;
+                            Errors.throwSchemaError(errMsg);
                         }
 
                         // Convert all the inheritor values keys to the current sub section 
@@ -309,7 +333,8 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
                             // Check if there is an attempted theme override for the given inheritance value
                             if (theme && Checks.isValidEndpointValueType(theme)) {
-                                Errors.throwThemeError(`Setting value of already computed inheritance value is invalid at path '${toDotPath(path)}'`);
+                                const errMsg = `Setting value of already computed inheritance value is invalid at path '${toDotPath(path, options)}'`;
+                                Errors.throwThemeError(errMsg);
                             }
 
                             return {
@@ -320,12 +345,14 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
 
                         return subSectionVals;    
                     } else {
-                        Errors.throwSchemaError(`Invalid inheritance type ${typeof inheritorDotPath} at path '${toDotPath(path)}'. Must be a string.`);
+                        const errMsg = `Invalid inheritance type ${typeof inheritorDotPath} at path '${toDotPath(path, options)}'. Must be a string.`;
+                        Errors.throwSchemaError(errMsg);
                     }
                 }
 
                 if (isRoot) {
-                    Errors.throwSchemaError(`${CONSTANTS.CONTROLS.INHERITES} is not valid at schema root`);
+                    const errMsg = `${CONSTANTS.CONTROLS.INHERITES} is not valid at schema root`;
+                    Errors.throwSchemaError(errMsg);
                 }
 
                 const inheritors = subSection;
@@ -351,25 +378,18 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
             // Do the regular theme value computation
 
             const themeSubSection = Utilities.isFunction(theme[subSectionName]) ? theme[subSectionName]() : theme[subSectionName];
-            const newPath = addToPath(path, subSectionName);
-
-            const isOnlyInheritsSubSection = Object.keys(subSection).length === 1 && !!subSection[CONSTANTS.CONTROLS.INHERITES];
-            const hasEndpoints = Checks.hasEndpointControls(Object.keys(subSection));
-
-            // Only throw an error if the theme value does not exist and the only item in the subsection is not an $inherits control
-            if (Utilities.isUndefinedOrNull(themeSubSection) && !(isOnlyInheritsSubSection || hasEndpoints)) {
-                Errors.throwThemeError(`Theme subsection is missing at path partial '${toDotPath(newPath)}'`);
-            }
+            const newPath = addToPath(path, subSectionName, options);
 
             // Recursively evaluate the sub sections
-            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, mixins, registeredTypes, allEvaluations);
+            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, mixins, registeredTypes, options, allEvaluations);
 
             return { ...currSubSectionEvaluations, ...subSectionEvaluations };
         }, {});
 
         return evaluations;
     } else {
-        Errors.throwSchemaError(`Invalid endpoint section of type '${typeof section}' at path '${toDotPath(path)}'`);
+        const errMsg = `Invalid endpoint section of type '${typeof section}' at path '${toDotPath(path, options)}'`
+        Errors.throwSchemaError(errMsg);
     }
 }
 
@@ -381,19 +401,23 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, computed
  * @param {Object|Function} schema The schema.
  * @param {Object|Function} mixins The mixins.
  * @param {Object|Function} customTypes Custom user-defined types.
+ * @param {Object} options Options used when generating.
  */
-export function generate(theme, schema, mixins = {}, customTypes = {}) {
+export function generate(theme, schema, mixins = {}, customTypes = {}, options = {}) {
     // Run the parameters if they are functions
     theme = (Utilities.isFunction(theme)) ? theme() : theme;
     schema = (Utilities.isFunction(schema)) ? schema() : schema;
     mixins = (Utilities.isFunction(mixins)) ? mixins() : mixins;
     customTypes = (Utilities.isFunction(customTypes)) ? customTypes() : customTypes;
 
+    // Setup options object
+    options = { ...CONSTANTS.DEFAULT_OPTIONS, ...options };
+
     // Get all the registered types
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
     // Generate
-    return evaluateSection("", schema, theme, mixins, registeredTypes);
+    return evaluateSection("", schema, theme, mixins, registeredTypes, options);
 }
 
 export default {

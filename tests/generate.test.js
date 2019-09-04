@@ -1,5 +1,6 @@
 import CONSTANTS from "../src/constants";
 import { generate } from "../src/generate";
+import colorType from "../src/types/color.type";
 
 const _ = CONSTANTS.SEPARATOR;
 
@@ -102,7 +103,9 @@ describe("general cases", () => {
             }
         };
 
-        const theme = {};
+        const theme = {
+            "level-1": "foo"
+        };
 
         const errorMessage = "Schema error: $default value of type object is not a valid type at path 'level-1'";
 
@@ -351,12 +354,12 @@ describe("general cases", () => {
         }).toThrow(errorMessage);
     });
 
-    test("mssing theme", () => {
+    test("missing theme", () => {
         const schema = {
             "level-1": {}
         };
 
-        const errorMessage = "Theme subsection is missing at path partial 'level-1'";
+        const errorMessage = "Invalid theme: Theme subsection is missing at path partial 'level-1'";
 
         expect(() => {
             generate({}, schema);
@@ -1056,5 +1059,183 @@ describe("inheritance cases", () => {
         const generated = generate(theme, schema);
 
         expect(generated).toEqual(expectedOut);
+    });
+});
+
+describe("option tests", () => {
+    test("with color standardization", () => {
+        const schema = {
+            "level-1a": {
+                $type: colorType.name
+            },
+            "level-1b": {
+                $type: colorType.name
+            },
+            "level-1c": {
+                $type: colorType.name
+            },
+            "level-1d": {
+                $type: colorType.name
+            },
+            "level-1e": {
+                $type: colorType.name
+            },
+            "level-1f": {
+                $type: colorType.name
+            }
+        };
+
+        const theme = {
+            "level-1a": "rgb(70, 171, 225)",
+            "level-1b": "hsl(201, 69%, 58%)",
+            "level-1c": "#46ABE1",
+            "level-1d": "rgba(70, 171, 225, 0.5)",
+            "level-1e": "hsla(201, 69%, 58%, 0.5)",
+            "level-1f": "red"
+        };
+
+        const options = {
+            STANDARDIZE_COLORS: true
+        };
+
+        const expectedOut = {
+            "level-1a": "70, 171, 225",
+            "level-1b": "74.00099999999995, 170.06969999999995, 221.79900000000004",
+            "level-1c": "70, 171, 225",
+            "level-1d": "70, 171, 225",
+            "level-1e": "74.00099999999995, 170.06969999999995, 221.79900000000004",
+            "level-1f": "255, 0, 0"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("without color standardization", () => {
+        const schema = {
+            "level-1a": {
+                $type: colorType.name
+            },
+            "level-1b": {
+                $type: colorType.name
+            },
+            "level-1c": {
+                $type: colorType.name
+            },
+            "level-1d": {
+                $type: colorType.name
+            },
+            "level-1e": {
+                $type: colorType.name
+            },
+            "level-1f": {
+                $type: colorType.name
+            }
+        };
+
+        const theme = {
+            "level-1a": "rgb(70, 171, 225)",
+            "level-1b": "hsl(201, 69%, 58%)",
+            "level-1c": "#46ABE1",
+            "level-1d": "rgba(70, 171, 225, 0.5)",
+            "level-1e": "hsla(201, 69%, 58%, 0.5)",
+            "level-1f": "red"
+        };
+
+        const options = {
+            STANDARDIZE_COLORS: false
+        };
+
+        const expectedOut = {
+            "level-1a": "rgb(70, 171, 225)",
+            "level-1b": "hsl(201, 69%, 58%)",
+            "level-1c": "#46ABE1",
+            "level-1d": "rgba(70, 171, 225, 0.5)",
+            "level-1e": "hsla(201, 69%, 58%, 0.5)",
+            "level-1f": "red"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("custom separator", () => {
+        const schema = {
+            "level-1": {
+                "level-2": {}
+            }
+        };
+
+        const theme = {
+            "level-1": {
+                "level-2": "foo"
+            }
+        };
+
+        const options = {
+            SEPARATOR: "-=_=-"
+        };
+
+        const expectedOut = {
+            "level-1-=_=-level-2": "foo"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("custom default endpoint", () => {
+        const schema = {
+            "level-1": {}
+        };
+
+        const options = {
+            DEFAULT_ENDPOINT: {
+                $type: colorType.name,
+                $required: false,
+                $default: "rgb(255, 0, 0)"
+            }
+        };
+
+        // Case 1: specified valid endpoint value
+
+        const theme_good_1 = {
+            "level-1": "rgb(20, 50, 45)"
+        };
+
+        const expectedOut_1 = {
+            "level-1": "20, 50, 45"
+        };
+
+        const generated_1 = generate(theme_good_1, schema, {}, {}, options);
+
+        expect(generated_1).toEqual(expectedOut_1)
+
+        // Case 2: unspecified, default value
+
+        const theme_good_2 = {};
+
+        const expectedOut_2 = {
+            "level-1": "255, 0, 0"
+        };
+
+        const generated_2 = generate(theme_good_2, schema, {}, {}, options);
+
+        expect(generated_2).toEqual(expectedOut_2);
+
+        // Case 3: specified invalid endpoint value
+
+        const theme_bad = {
+            "level-1": "foo"
+        };
+
+        const errorMessage = "Validation error: Theme value 'foo' failed for type 'color'";
+
+        expect(() => {
+            generate(theme_bad, schema, {}, {}, options);
+        }).toThrow(errorMessage);
     });
 });
