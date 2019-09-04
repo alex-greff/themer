@@ -15,6 +15,7 @@ A base library for setting up structured CSS/SCSS themes in frontend web applica
     * [Mixins](#mixins)
     * [Inheritance](#inheritance)
     * [Custom Types](#custom-types)
+    * [Options](#options)
 * [Extra Tools](#extra-tools)
     * [SASS Tools](#sass-tools)
 
@@ -52,7 +53,7 @@ import Themer from "themer@core";
 The `generate` method computes and returns an object with key-value mappings to all the generated endpoint values based off the supplied schema and theme (along with optional mixins and extra registered types).
 
 ```js
-Themer.generate(theme: Theme, schema: Schema, mixins: Mixins = {}, registeredTypes: RegisteredTypes = {});
+Themer.generate(theme: Theme, schema: Schema, mixins: Mixins = {}, registeredTypes: RegisteredTypes = {}, options: Options = DefaultOptions);
 ```
 
 ### General Schema
@@ -103,6 +104,8 @@ The default endpoint configuration is as follows:
     $validate: null
 }
 ```
+
+*Note:* This can be configured in the [options](#options) object.
 
 Adding any values manually will result in the respective default configuration options being overridden.
 
@@ -487,6 +490,31 @@ const registeredTypes = tb.build();
 // }
 ```
 
+### Options
+
+Options can be used to configure the behavior of `Themer.generate`.
+
+
+**Default Options:**
+```js
+{
+    // The level separator in the generated object
+    SEPARATOR: "__",
+    // The default endpoint
+    DEFAULT_ENDPOINT: {
+        $required: false,
+        $type: "any",
+        $default: null,
+        $validate: null
+    },
+    // Standardizes any color values
+    // Note: this allows the SASS color-link function to work properly
+    // Ex: "rgb(25, 60, 80)" becomes "25, 60, 80"
+    STANDARDIZE_COLORS: true
+}
+```
+
+
 ## Extra Tools
 
 ### SASS Tools
@@ -510,6 +538,7 @@ some-propety: base-link($path-partials...);
 // Generates a CSS var reference specifically for colors
 // Note: color-link only supports rgba color values so non-rgba values must be converted when injected the CSS variables
 // Ex: base-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2), 0.5)
+// Note: color-link will only work if STANDARDIZE_COLORS=true in the generate options
 some-propety: color-link($path-partials...[, $opacity: 1]);
 ```
 
