@@ -1187,6 +1187,32 @@ describe("option tests", () => {
         expect(generated).toEqual(expectedOut);
     });
 
+    test("custom prefix", () => {
+        const schema = {
+            "level-1": {
+                "level-2": {}
+            }
+        };
+
+        const theme = {
+            "level-1": {
+                "level-2": "foo"
+            }
+        };
+
+        const options = {
+            PREFIX: "--"
+        };
+
+        const expectedOut = {
+            "--level-1__level-2": "foo"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
     test("custom default endpoint", () => {
         const schema = {
             "level-1": {}

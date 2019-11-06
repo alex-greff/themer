@@ -1,6 +1,7 @@
 import anyType from "./types/any.type";
 
 export const SEPARATOR = "__";
+export const PREFIX = "";
 
 export const CONTROLS = {
     REQUIRED: "$required",
@@ -32,6 +33,7 @@ export const DEFAULT_ENDPOINT = {
 
 export const DEFAULT_OPTIONS = {
     SEPARATOR: SEPARATOR,
+    PREFIX: PREFIX,
     DEFAULT_ENDPOINT: DEFAULT_ENDPOINT,
     STANDARDIZE_COLORS: true,
 };

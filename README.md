@@ -500,6 +500,8 @@ Options can be used to configure the behavior of `Themer.generate`.
 {
     // The level separator in the generated object
     SEPARATOR: "__",
+    // The prefix of each item in the generated object
+    PREFIX: "",
     // The default endpoint
     DEFAULT_ENDPOINT: {
         $required: false,

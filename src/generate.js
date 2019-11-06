@@ -417,7 +417,21 @@ export function generate(theme, schema, mixins = {}, customTypes = {}, options =
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
     // Generate
-    return evaluateSection("", schema, theme, mixins, registeredTypes, options);
+    let generated = evaluateSection("", schema, theme, mixins, registeredTypes, options);
+
+    if (options.PREFIX) {
+        const renamedGenerated = {};
+
+        // Rename all the 
+        Object.entries(generated).forEach(([key, value]) => {
+            renamedGenerated[`${options.PREFIX}${key}`] = value;
+        });
+
+        // Update generated with prefixed version
+        generated = renamedGenerated;
+    }
+
+    return generated;
 }
 
 export default {
