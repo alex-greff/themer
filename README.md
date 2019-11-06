@@ -539,7 +539,7 @@ some-propety: base-link($path-partials...);
 
 // Generates a CSS var reference specifically for colors
 // Note: color-link only supports rgba color values so non-rgba values must be converted when injected the CSS variables
-// Ex: base-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2), 0.5)
+// Ex: color-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2), 0.5)
 // Note: color-link will only work if STANDARDIZE_COLORS=true in the generate options
 some-propety: color-link($path-partials...[, $opacity: 1]);
 ```
