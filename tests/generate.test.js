@@ -534,6 +534,37 @@ describe("mixin cases", () => {
         expect(generated).toEqual(expectedOut);
     });
 
+    test("chained mixins", () => {
+        const schema = {
+            "level-1": {
+                $mixins: "mixin-1"
+            }
+        };
+
+        const mixins = {
+            "mixin-1": {
+                $mixins: "mixin-2"
+            },
+            "mixin-2": {
+                "level-2": {}
+            }
+        };
+
+        const theme = {
+            "level-1": { 
+                "level-2": "foo"
+            }
+        };
+
+        const expectedOut = {
+            [`level-1${_}level-2`]: "foo"
+        };
+
+        const generated = generate(theme, schema, mixins);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
     test("mixin at root level", () => {
         const schema = {
             $mixins: "mixin-1"
