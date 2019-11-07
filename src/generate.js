@@ -130,8 +130,9 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, options 
 
     // Inject any mixins (making sure to remove the $mixin control)
     const includedMixins = section[CONSTANTS.CONTROLS.MIXINS];
+
     if (includedMixins) {
-        function injectMixin(mixinPath) {
+        function getMixinContent(mixinPath) {
             if (!Utilities.isString(mixinPath)) {
                 const errMsg = `Invalid mixin type ${typeof mixinPath} at path '${toDotPath(path, options)}'. Must be a string.`;
                 Errors.throwSyntaxError(errMsg);
@@ -151,30 +152,60 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, options 
                 Errors.throwSchemaError(errMsg);
             }
 
+            return mixinObj;
+        }
+
+        // Construct the initial list of the mixins to inject in
+        let addMixins = [];
+        if (Utilities.isArray(includedMixins)) {
+            addMixins = [ ...includedMixins ];
+        } else if (Utilities.isFunction(includedMixins)) {
+            const resMixins = includedMixins();
+            addMixins = (Utilities.isArray(resMixins)) ? [ ...resMixins ] : [resMixins];
+        } else {
+            addMixins = [includedMixins];
+        }
+
+        // Add all the mixins in
+        while (addMixins.length != 0) {
+            const nextMixinPath = addMixins.shift();
+
+            let mixinContent = getMixinContent(nextMixinPath);
+
+            const internalMixins = mixinContent[CONSTANTS.CONTROLS.MIXINS];
+
+            // If the mixin has internal mixins, add them to the front of the addMixins queue
+            if (internalMixins) {
+                if (Utilities.isArray(internalMixins)) {
+                    addMixins.unshift(...internalMixins);
+                } else if (Utilities.isFunction(internalMixins)) {
+                    const resInternalMixins = internalMixins();
+                    const toAddMixins = (Utilities.isArray(resInternalMixins)) 
+                        ? [ ...resInternalMixins ] : [resInternalMixins];
+                    addMixins.unshift(...toAddMixins);
+                } else {
+                    addMixins.unshift(internalMixins);
+                }
+
+                // Remove the $mixins operator from the mixin's content
+                mixinContent = update(mixinContent, {
+                    $unset: [CONSTANTS.CONTROLS.MIXINS]
+                });
+            }
+
             const sectionSplit = Utilities.splitEntries(CONSTANTS.CONTROLS.MIXINS, section);
 
-            // Reconstruct the section with the $mixin control removed
+            // Inject the mixin content right before the $mixin operator
             const updatedSection = {
                 ...sectionSplit[0],
-                ...mixinObj,
+                ...mixinContent,
                 [CONSTANTS.CONTROLS.MIXINS]: section[CONSTANTS.CONTROLS.MIXINS],
                 ...sectionSplit[1]
             };
             section = updatedSection;
         }
 
-        if (Utilities.isArray(includedMixins)) {
-            // Inject each mixin
-            includedMixins.forEach((mixinPath) => injectMixin(mixinPath));
-        } else if (Utilities.isFunction(includedMixins)) {
-            // Inject the return value of the function after is it run
-            injectMixin(includedMixins()); 
-        } else {
-            // Inject the single mixin
-            injectMixin(includedMixins);
-        }
-
-        // Remove the $mixin section
+        // Remove the $mixin operator from the section
         section = update(section, {
             $unset: [CONSTANTS.CONTROLS.MIXINS]
         });
