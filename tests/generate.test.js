@@ -959,7 +959,7 @@ describe("inheritance cases", () => {
         }).toThrow(errorMessage);
     });
 
-    test("attempted inheritance override in theme", () => {
+    test("inheritance override in theme", () => {
         const schema = {
             "level-1a": {},
             "level-1b": {
@@ -972,11 +972,14 @@ describe("inheritance cases", () => {
             "level-1b": "bar"
         };
 
-        const errorMessage = "Invalid theme: Setting value of already computed inheritance value is invalid at path 'level-1b'";
+        const expectedOut = {
+            "level-1a": "foo",
+            "level-1b": "bar"
+        };
 
-        expect(() => {
-            generate(theme, schema);
-        }).toThrow(errorMessage);
+        const generated = generate(theme, schema);
+
+        expect(generated).toEqual(expectedOut);
     });
 
     test("inheritance and endpoint control in same sub-section", () => {

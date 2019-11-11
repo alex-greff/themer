@@ -1,4 +1,5 @@
 import update from "immutability-helper";
+import cloneDeep from "lodash.clonedeep";
 import defaultTypes from "./types";
 import colorType from "./types/color.type";
 import Utilities from "./utilities";
@@ -110,6 +111,7 @@ function computeReturnEntry(themeVal, path, type, registeredTypes, options) {
 /**
  * Recursively evaluates the given section with the theme.
  * 
+ * @param {Object} schema The entire schema.
  * @param {String} path The current path.
  * @param {Object} section The current section.
  * @param {Object} theme The current theme section.
@@ -117,8 +119,9 @@ function computeReturnEntry(themeVal, path, type, registeredTypes, options) {
  * @param {Object} registeredTypes All the registered types.
  * @param {Object} options Options used when generating.
  * @param {Object} computedEvaluations Any evaluations that already have been computed from different sections.
+ * @param {Boolean} lazyEnforcement Forces all endpoints to not be required and if a section is missing on a theme it is ignored.
  */
-function evaluateSection(path, section, theme, mixins, registeredTypes, options = {}, computedEvaluations = {}) {
+function evaluateSection(schema, path, section, theme, mixins, registeredTypes, options = {}, computedEvaluations = {}, lazyEnforcement = false) {
     const isRoot = !path; // Is root if the path is an empty string
 
     // Check for invalid syntax
@@ -246,6 +249,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, options 
             ...section,
         }
 
+        // Force the current endpoint to not be required if specified for lazy enforcement
+        if (lazyEnforcement) {
+            endpoint[CONSTANTS.CONTROLS.REQUIRED] = false;
+        }
+
         const required = endpoint[CONSTANTS.CONTROLS.REQUIRED];
         const type = endpoint[CONSTANTS.CONTROLS.TYPE];
         const validator = endpoint[CONSTANTS.CONTROLS.VALIDATE];
@@ -295,6 +303,11 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, options 
 
         // Case: $default not provided and no theme provided
         if (Utilities.isUndefinedOrNull(defaultVal) && Utilities.isUndefinedOrNull(themeVal)) {
+            // Do not do anything if lazy enforcement is enabled
+            if (lazyEnforcement) {
+                return;
+            }
+
             const errMsg = `Theme subsection is missing at path partial '${toDotPath(path, options)}'`;
             Errors.throwThemeError(errMsg);
         }
@@ -362,12 +375,6 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, options 
                         const subSectionVals = Object.entries(inheritorEvals).reduce((acc, [inheritorEvalPath, val]) => {
                             const inheritedPath = inheritorEvalPath.replace(inheritorPath, path);
 
-                            // Check if there is an attempted theme override for the given inheritance value
-                            if (theme && Checks.isValidEndpointValueType(theme)) {
-                                const errMsg = `Setting value of already computed inheritance value is invalid at path '${toDotPath(path, options)}'`;
-                                Errors.throwThemeError(errMsg);
-                            }
-
                             return {
                                 ...acc,
                                 [inheritedPath]: val
@@ -393,26 +400,33 @@ function evaluateSection(path, section, theme, mixins, registeredTypes, options 
                 if (Utilities.isArray(inheritors)) {
                     Errors.throwSchemaError(`Arrays are not allowed with ${CONSTANTS.CONTROLS.INHERITES}`);
                 }
-        
-                if (Utilities.isFunction(inheritors)) {
-                    // Inject the return value of the function after is it run
-                    computedInheritVals = injectInheritance(inheritors()); 
-                } else {
-                    // Inject the single inheritor
-                    computedInheritVals = injectInheritance(inheritors);
-                }
 
-                return computedInheritVals;
+                // Get the inheritor path
+                const inheritorPath = Utilities.isFunction(inheritors) ? inheritors() : inheritors;
+
+                // Compute the inherhit values
+                computedInheritVals = injectInheritance(inheritorPath);
+                
+                // Compute any override values provided by the theme
+                const inheritanceSchema = cloneDeep(Utilities.getIn(schema, inheritorPath));
+                const computedOverrideVals = evaluateSection(schema, path, inheritanceSchema, theme, mixins, registeredTypes, options, {}, true);
+
+                return { ...computedInheritVals, ...computedOverrideVals };
             }
 
 
             // Do the regular theme value computation
 
+            // If no theme is provided for the given sub-section and lazy enforcment is enabled then just return out
+            if (!theme && lazyEnforcement) {
+                return { ...currSubSectionEvaluations };
+            }
+
             const themeSubSection = Utilities.isFunction(theme[subSectionName]) ? theme[subSectionName]() : theme[subSectionName];
             const newPath = addToPath(path, subSectionName, options);
 
             // Recursively evaluate the sub sections
-            const subSectionEvaluations = evaluateSection(newPath, subSection, themeSubSection, mixins, registeredTypes, options, allEvaluations);
+            const subSectionEvaluations = evaluateSection(schema, newPath, subSection, themeSubSection, mixins, registeredTypes, options, allEvaluations, lazyEnforcement);
 
             return { ...currSubSectionEvaluations, ...subSectionEvaluations };
         }, {});
@@ -448,7 +462,7 @@ export function generate(theme, schema, mixins = {}, customTypes = {}, options =
     const registeredTypes = { ...customTypes, ...defaultTypes };
 
     // Generate
-    let generated = evaluateSection("", schema, theme, mixins, registeredTypes, options);
+    let generated = evaluateSection(schema, "", schema, theme, mixins, registeredTypes, options, false);
 
     if (options.PREFIX) {
         const renamedGenerated = {};
