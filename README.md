@@ -206,7 +206,7 @@ Mixins are also injected relative to their location in the schema and their arra
 ```js
 // schema
 {
-    "Global": {
+    "GLOBAL": {
         $mixins: "section"
     }
 }
@@ -251,7 +251,7 @@ Mixins are also injected relative to their location in the schema and their arra
 
 // evaluated as
 {
-    "Global": {
+    "GLOBAL": {
         "background-color": {
             "primary": {
                 $type: "color",
@@ -285,7 +285,7 @@ Mixins are also injected relative to their location in the schema and their arra
 
 // theme
 {
-    "Global": {
+    "GLOBAL": {
         "background-color": {
             "primary": "#FFFFFF",
             "secondary": "#E1E1E1",
@@ -301,12 +301,12 @@ Mixins are also injected relative to their location in the schema and their arra
 
 // output from Themer.generate
 {
-    "Global__background-color__primary": "#FFFFFF",
-    "Global__background-color__secondary": "#E1E1E1",
-    "Global__background-color__tertiary": "#BDEFEA",
-    "Global__background-color__quaternary": "#8FC8C2",
-    "Global__text-color__primary": "black",
-    "Global__text-color__secondary": "#4D4D4D"
+    "GLOBAL__background-color__primary": "#FFFFFF",
+    "GLOBAL__background-color__secondary": "#E1E1E1",
+    "GLOBAL__background-color__tertiary": "#BDEFEA",
+    "GLOBAL__background-color__quaternary": "#8FC8C2",
+    "GLOBAL__text-color__primary": "black",
+    "GLOBAL__text-color__secondary": "#4D4D4D"
 }
 ```
 
@@ -326,11 +326,11 @@ They can be thought of as similar to mixins but are injected **after** evaluatio
 
 // schema
 {
-    "Global": {
+    "GLOBAL": {
         $mixins: "section"
     },
     "Button": {
-        $inherits: "Global"
+        $inherits: "GLOBAL"
     }
 }
 
@@ -374,7 +374,7 @@ They can be thought of as similar to mixins but are injected **after** evaluatio
 
 // evaluated as
 {
-    "Global": {
+    "GLOBAL": {
         "background-color": {
             "primary": {
                 $type: "color",
@@ -405,13 +405,13 @@ They can be thought of as similar to mixins but are injected **after** evaluatio
         }
     },
     "Button": {
-        $inherits: "Global"
+        $inherits: "GLOBAL"
     }
 }
 
 // theme
 {
-    "Global": {
+    "GLOBAL": {
         "background-color": {
             "primary": "#FFFFFF",
             "secondary": "#E1E1E1",
@@ -430,18 +430,18 @@ They can be thought of as similar to mixins but are injected **after** evaluatio
             "tertiary": "#29A2E2",
             "quaternary": "#3592C4"
         }
-        // By leaving "text-color" out, it will just be evaluated to the same value as it is in "Global"
+        // By leaving "text-color" out, it will just be evaluated to the same value as it is in "GLOBAL"
     }
 }
 
 // output from Themer.generate
 {
-    "Global__background-color__primary": "#FFFFFF",
-    "Global__background-color__secondary": "#E1E1E1",
-    "Global__background-color__tertiary": "#BDEFEA",
-    "Global__background-color__quaternary": "#8FC8C2",
-    "Global__text-color__primary": "black",
-    "Global__text-color__secondary": "#4D4D4D",
+    "GLOBAL__background-color__primary": "#FFFFFF",
+    "GLOBAL__background-color__secondary": "#E1E1E1",
+    "GLOBAL__background-color__tertiary": "#BDEFEA",
+    "GLOBAL__background-color__quaternary": "#8FC8C2",
+    "GLOBAL__text-color__primary": "black",
+    "GLOBAL__text-color__secondary": "#4D4D4D",
     "Button__background-color__primary": "#2CDEF0",
     "Button__background-color__secondary": "#1D8D99",
     "Button__background-color__tertiary": "#29A2E2",
