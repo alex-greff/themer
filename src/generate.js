@@ -411,6 +411,10 @@ function evaluateSection(schema, path, section, theme, mixins, registeredTypes, 
                 const inheritanceSchema = cloneDeep(Utilities.getIn(schema, inheritorPath));
                 const computedOverrideVals = evaluateSection(schema, path, inheritanceSchema, theme, mixins, registeredTypes, options, {}, true);
 
+                if (options.CONDENSE_KEYS) {
+                    return { ...computedOverrideVals };
+                }
+
                 return { ...computedInheritVals, ...computedOverrideVals };
             }
 

@@ -1298,4 +1298,110 @@ describe("option tests", () => {
             generate(theme_bad, schema, {}, {}, options);
         }).toThrow(errorMessage);
     });
+
+    test("condense keys enabled - no override values", () => {
+        const schema = {
+            "level-1a": {
+                "level-2a": {},
+                "level-2b": {}
+            },
+            "level-1b": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": {
+                "level-2a": "foo",
+                "level-2b": "bar"
+            }
+        };
+
+        const options = {
+            CONDENSE_KEYS: true
+        };
+
+        const expectedOut = {
+            "level-1a__level-2a": "foo",
+            "level-1a__level-2b": "bar"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("condense keys enabled - some override values", () => {
+        const schema = {
+            "level-1a": {
+                "level-2a": {},
+                "level-2b": {}
+            },
+            "level-1b": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": {
+                "level-2a": "foo",
+                "level-2b": "bar"
+            },
+            "level-1b": {
+                "level-2a": "jar"
+            },
+        };
+
+        const options = {
+            CONDENSE_KEYS: true
+        };
+
+        const expectedOut = {
+            "level-1a__level-2a": "foo",
+            "level-1a__level-2b": "bar",
+            "level-1b__level-2a": "jar"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
+
+    test("condense keys enabled - all values overrided", () => {
+        const schema = {
+            "level-1a": {
+                "level-2a": {},
+                "level-2b": {}
+            },
+            "level-1b": {
+                $inherits: "level-1a"
+            }
+        };
+
+        const theme = {
+            "level-1a": {
+                "level-2a": "foo",
+                "level-2b": "bar"
+            },
+            "level-1b": {
+                "level-2a": "jar",
+                "level-2b": "bar"
+            },
+        };
+
+        const options = {
+            CONDENSE_KEYS: true
+        };
+
+        const expectedOut = {
+            "level-1a__level-2a": "foo",
+            "level-1a__level-2b": "bar",
+            "level-1b__level-2a": "jar",
+            "level-1b__level-2b": "bar"
+        };
+
+        const generated = generate(theme, schema, {}, {}, options);
+
+        expect(generated).toEqual(expectedOut);
+    });
 });

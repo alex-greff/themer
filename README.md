@@ -512,7 +512,12 @@ Options can be used to configure the behavior of `Themer.generate`.
     // Standardizes any color values
     // Note: this allows the SASS color-link function to work properly
     // Ex: "rgb(25, 60, 80)" becomes "25, 60, 80"
-    STANDARDIZE_COLORS: true
+    STANDARDIZE_COLORS: true,
+    // When enabled, generated values from sections with with inherits are only
+    // included if an override value exists for that specific generated value.
+    // This option is meant to be used when the redundant section-specific 
+    // generated keys that using $inherits causes is not wanted.
+    CONDENSE_VALUES: false
 }
 ```
 

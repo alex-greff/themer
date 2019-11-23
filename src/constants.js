@@ -36,6 +36,7 @@ export const DEFAULT_OPTIONS = {
     PREFIX: PREFIX,
     DEFAULT_ENDPOINT: DEFAULT_ENDPOINT,
     STANDARDIZE_COLORS: true,
+    CONDENSE_KEYS: false
 };
 
 export default {
