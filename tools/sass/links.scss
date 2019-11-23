@@ -2,11 +2,19 @@
 @import "./utilities.scss";
 @import "./errors.scss";
 
-@function _construct-path($partials...) {
+$fallback-base: "GLOBAL";
+
+@function _construct-path($use-fallback, $partials...) {
     $path: "--";
     
     @for $i from 0 to length($partials) {
         $curr-partial: nth($partials, $i + 1);
+
+        // Force root to use the fallback base
+        @if $i == 0 and $use-fallback == true {
+            $curr-partial: $fallback-base
+        }
+
         $separator: if($i == 0, "", $LINK-SEPARATOR);
         $path: $path + $separator + $curr-partial;
     }
@@ -15,14 +23,16 @@
 }
 
 // Generates a CSS variable linkage with the given partials
+// Uses $fallback-base as the fallback value
 @function base-link($partials...) {
     // Checks 
     @if length($partials) == 0 {
         $error: throw-invalid-link-arguments-error();
     }
 
-    $path: _construct-path($partials...);
-    @return var(unquote($path));
+    $path: _construct-path(false, $partials...);
+    $fallback-path: _construct-path(true, $partials...);
+    @return var(unquote($path), var(unquote($fallback-path)));
 }
 
 

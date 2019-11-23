@@ -537,14 +537,15 @@ To make linking to the theme easier the following SCSS functions have been built
 
 **Functions:**
 ```scss
-// Generates a CSS var reference of the given path partials
-// Ex: base-link("level-1", "level-2") -> var(--level-1__level-2)
+// Generates a CSS var reference of the given path partials.
+// base-link also provides a default fallback value which is the given link but with the root replaced with 'GLOBAL'
+// Ex: base-link("level-1", "level-2") -> var(--level-1__level-2, var(--GLOBAL__level-2))
 some-propety: base-link($path-partials...);
 
 
 // Generates a CSS var reference specifically for colors
 // Note: color-link only supports rgba color values so non-rgba values must be converted when injected the CSS variables
-// Ex: color-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2), 0.5)
+// Ex: color-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2, var(--GLOBAL__level-2)), 0.5)
 // Note: color-link will only work if STANDARDIZE_COLORS=true in the generate options
 some-propety: color-link($path-partials...[, $opacity: 1]);
 ```
@@ -556,7 +557,7 @@ some-propety: color-link($path-partials...[, $opacity: 1]);
 @import "[path to themer]/tools/sass/index.scss";
 
 .some-selector {
-    color: color-link("General", "text-color", "primary");
-    background-color: color-link("General", "background-color", "secondary", 0.5);
+    color: color-link("Button", "text-color", "primary");
+    background-color: color-link("Button", "background-color", "secondary", 0.5);
 }
 ```
