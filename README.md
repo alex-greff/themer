@@ -314,7 +314,7 @@ Mixins are also injected relative to their location in the schema and their arra
 
 Inheritance allows sections of the schema to inherit the values from already computed sections of the schema. 
 
-They can be thought of as similar to mixins but are injected **after** evaluation. 
+They can be thought of as similar to mixins but injected **after** evaluation. 
 
 *Note #1:* at the moment only single inheritance is supported.
 
@@ -453,9 +453,9 @@ They can be thought of as similar to mixins but are injected **after** evaluatio
 
 ### Custom Types
 
-Added custom types is supported via the `registeredTypes` parameter in `Themer.generate`.
+Adding custom types is supported via the `registeredTypes` parameter in `Themer.generate`.
 
-Adding custom types can be done manually by adding object key-values with the following form:
+Adding custom types can be done manually by adding key-values to the object with the following form:
 ```js
 [name]: {
     name: String, // The $type
@@ -473,7 +473,7 @@ const TypeBuilder = require("themer@core").TypeBuilder;
 // ES6+
 import { TypeBuilder } from "themer@core";
 
-// Create instance
+// Create type builder instance
 const tb = new TypeBuilder();
 
 // Add custom types
@@ -538,15 +538,15 @@ To make linking to the theme easier the following SCSS functions have been built
 **Functions:**
 ```scss
 // Generates a CSS var reference of the given path partials.
-// base-link also provides a default fallback value which is the given link but with the root replaced with 'GLOBAL'
+// Note #1: base-link also provides a default fallback value which is the given link but with the root replaced with 'GLOBAL'
 // Ex: base-link("level-1", "level-2") -> var(--level-1__level-2, var(--GLOBAL__level-2))
 some-propety: base-link($path-partials...);
 
 
 // Generates a CSS var reference specifically for colors
-// Note: color-link only supports rgba color values so non-rgba values must be converted when injected the CSS variables
+// Note #2: color-link only supports rgba color values so non-rgba values must be converted when injected the CSS variables
 // Ex: color-link("level-1", "level-2", 0.5) -> rgba(var(--level-1__level-2, var(--GLOBAL__level-2)), 0.5)
-// Note: color-link will only work if STANDARDIZE_COLORS=true in the generate options
+// Note #3: color-link will only work if STANDARDIZE_COLORS=true in the generate options
 some-propety: color-link($path-partials...[, $opacity: 1]);
 ```
 
