@@ -9,8 +9,10 @@ type SubSection = object;
 
 type Theme = object;
 type Schema = {
-    GLOBAL: SubSection,
-    [other: string]: SubSection | Endpoint;
+    GLOBAL: {
+        [section: string]: SubSection | Endpoint;
+    },
+    [topLevelSection: string]: SubSection | Endpoint;
 };
 type Mixins = object;
 
