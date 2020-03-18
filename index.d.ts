@@ -5,7 +5,7 @@ type Mixins = object;
 interface CustomTypes {
     [name: string]: {
         name: string;
-        validator(val: any): boolean;
+        validator(val: unknown): boolean;
     }
 }
 
@@ -21,6 +21,9 @@ interface GeneratedProperties {
     [cssVar: string]: any
 }
 
-declare module "themer" {
-    export function generate(theme: Theme, schema: Schema, mixins?: Mixins, customTypes?: CustomTypes, options?: Options): GeneratedProperties;
+export class TypeBuilder {
+    addType(name: string, validator: (val: unknown) => boolean): void;
+    build(): CustomTypes;
 }
+
+export function generate(theme: Theme, schema: Schema, mixins?: Mixins, customTypes?: CustomTypes, options?: Options): GeneratedProperties;
