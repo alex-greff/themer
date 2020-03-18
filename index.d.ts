@@ -1,5 +1,17 @@
+interface Endpoint {
+    $required?: boolean;
+    $type?: string;
+    $default?: string;
+    $validate?(val: unknown): boolean;
+}
+
+type SubSection = object;
+
 type Theme = object;
-type Schema = object;
+type Schema = {
+    GLOBAL: SubSection,
+    [other: string]: SubSection | Endpoint;
+};
 type Mixins = object;
 
 interface CustomTypes {
