@@ -5,16 +5,29 @@ interface Endpoint {
     $validate?(val: unknown): boolean;
 }
 
-type SubSection = object;
+interface SubSection {
+    [section: string]: SubSection | Mixin | Inherits | Endpoint;
+};
+
+interface Mixin {
+    $mixins: string | string[];
+    [section: string]: SubSection | Mixin | Inherits | Endpoint;
+}
+
+interface Inherits {
+    $inherits: string;
+    [section: string]: SubSection | Mixin | Inherits | Endpoint;
+}
 
 type Theme = object;
 type Schema = {
     GLOBAL: {
-        [section: string]: SubSection | Endpoint;
+        [section: string]: SubSection | Mixin | Inherits | Endpoint;
     },
     [topLevelSection: string]: SubSection | Endpoint;
 };
-type Mixins = object;
+
+type MixinDefinitions = object;
 
 interface CustomTypes {
     [name: string]: {
@@ -40,4 +53,4 @@ export class TypeBuilder {
     build(): CustomTypes;
 }
 
-export function generate(theme: Theme, schema: Schema, mixins?: Mixins, customTypes?: CustomTypes, options?: Options): GeneratedProperties;
+export function generate(theme: Theme, schema: Schema, mixins?: MixinDefinitions, customTypes?: CustomTypes, options?: Options): GeneratedProperties;
