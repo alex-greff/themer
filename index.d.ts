@@ -7,25 +7,21 @@ interface Endpoint {
 
 interface SubSection {
     [section: string]: SubSection | Mixin | Inherits | Endpoint;
-};
+}
 
 interface Mixin {
     $mixins: string | string[];
-    [section: string]: SubSection | Mixin | Inherits | Endpoint;
 }
 
 interface Inherits {
     $inherits: string;
-    [section: string]: SubSection | Mixin | Inherits | Endpoint;
 }
 
 type Theme = object;
 type Schema = {
-    GLOBAL: {
-        [section: string]: SubSection | Mixin | Inherits | Endpoint;
-    },
-    [topLevelSection: string]: SubSection | Endpoint;
-};
+    GLOBAL: SubSection | Mixin | Inherits | Endpoint;
+    [topLevelSection: string]: SubSection | Mixin | Inherits | Endpoint;
+}
 
 type MixinDefinitions = object;
 
